@@ -31,6 +31,11 @@ class TripResource extends JsonResource
                 'logged_at' => $log->logged_at->toIso8601String(),
                 'by' => $log->loggedBy?->name,
             ])),
+                "rests" => $this->whenLoaded("restPeriods", fn () => $this->restPeriods->map(fn ($r) => [
+                "started_at" => $r->started_at->toIso8601String(),
+                "ended_at" => $r->ended_at->toIso8601String(),
+                "minutes" => intdiv($r->duration_seconds, 60),
+            ])),
         ];
     }
 }

@@ -30,7 +30,7 @@ class TripController extends Controller
     {
         abort_unless($schedule->driver->user_id === $request->user()->id, 403);
 
-        $schedule->load(['truck', 'statusLogs.loggedBy']);
+        $schedule->load(["truck", "statusLogs.loggedBy", "restPeriods"]);
 
         return new TripResource($schedule);
     }

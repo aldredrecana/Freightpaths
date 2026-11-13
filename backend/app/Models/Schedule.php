@@ -67,6 +67,15 @@ class Schedule extends Model
             ->orderByDesc('logged_at')
             ->orderByDesc('id');
     }
+        public function locationPings(): HasMany
+    {
+        return $this->hasMany(LocationPing::class);
+    }
+
+    public function restPeriods(): HasMany
+    {
+        return $this->hasMany(RestPeriod::class)->orderBy('started_at');
+    }
 
     public function allowedNext(User $user): array
     {
