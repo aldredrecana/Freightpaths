@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('trucks', function (Blueprint $table) {
-        $table->id();
-        $table->string('plate_no', 20)->unique();
-        $table->string('model');
-        $table->unsignedInteger('capacity_kg');
-        $table->string('status', 20)->default('available');
-        $table->timestamps();
-    });
+            $table->id();
+            $table->string('plate_no', 20)->unique();
+            $table->string('model');
+            $table->unsignedInteger('capacity_kg');
+            $table->string('status', 20)->default('available');
+            $table->timestamps();
+        });
     }
 
     /**

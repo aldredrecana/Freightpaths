@@ -8,12 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class DeliveryStatusLog extends Model
 {
     public $timestamps = false;
+
     protected $fillable = ['schedule_id', 'logged_by', 'status', 'remarks', 'logged_at', 'is_late'];
+
     protected $casts = ['logged_at' => 'datetime', 'is_late' => 'boolean'];
+
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(Schedule::class);
     }
+
     public function loggedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'logged_by');

@@ -20,9 +20,10 @@ class EnsureUserHasRole
     ): Response {
         $user = $request->user();
 
-        if (!$user || !in_array($user->role?->name, $roles, true)) {
+        if (! $user || ! in_array($user->role?->name, $roles, true)) {
             abort(403);
         }
+
         return $next($request);
     }
 }

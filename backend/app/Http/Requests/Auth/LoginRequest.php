@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use App\Models\User;
 
 class LoginRequest extends FormRequest
 {
@@ -54,7 +54,7 @@ class LoginRequest extends FormRequest
         /** @var User $user */
         $user = Auth::user();
         $wantsDriver = $this->input('login_as') === 'driver';
-        
+
         if ($user->hasRole('driver') !== $wantsDriver) {
             Auth::logout();
             RateLimiter::hit($this->throttleKey());

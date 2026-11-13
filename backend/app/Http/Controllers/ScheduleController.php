@@ -2,81 +2,82 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\TripResource;
 use App\Models\Driver;
 use App\Models\Schedule;
 use App\Models\Truck;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use App\Models\User;
-use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class ScheduleController extends Controller
 {
     public function index(Request $request)
     {
-        $q = trim((string) $request->query("q", ""));
-        $status = $request->query("status");
+        $q = trim((string) $request->query('q', ''));
+        $status = $request->query('status');
 
-        $schedules = Schedule::with(["driver.user", "truck"])
-            ->whereIn("status", Schedule::ACTIVE)
-            ->when($q !== "", function ($query) use ($q) {
-                $like = "%" . $q . "%";
+        $schedules = Schedule::with(['driver.user', 'truck'])
+            ->whereIn('status', Schedule::ACTIVE)
+            ->when($q !== '', function ($query) use ($q) {
+                $like = '%'.$q.'%';
                 $query->where(function ($w) use ($q, $like) {
-                    $w->where("origin_address", "ilike", $like)
-                        ->orWhere("destination_address", "ilike", $like)
+                    $w->where('origin_address', 'ilike', $like)
+                        ->orWhere('destination_address', 'ilike', $like)
                         ->orWhereHas(
-                            "truck",
-                            fn($t) => $t->where("plate_no", "ilike", $like),
+                            'truck',
+                            fn ($t) => $t->where('plate_no', 'ilike', $like),
                         )
                         ->orWhereHas(
-                            "driver.user",
-                            fn($u) => $u->where("name", "ilike", $like),
+                            'driver.user',
+                            fn ($u) => $u->where('name', 'ilike', $like),
                         );
 
                     if (preg_match('/^(fp-?)?(\d+)$/i', $q, $m)) {
-                        $w->orWhere("id", (int) $m[2]);
+                        $w->orWhere('id', (int) $m[2]);
                     }
                 });
             })
             ->when(
                 in_array($status, Schedule::ACTIVE, true),
-                fn($query) => $query->where("status", $status),
+                fn ($query) => $query->where('status', $status),
             )
             ->orderByRaw(
                 "CASE WHEN status = 'needs_reassignment' THEN 0 ELSE 1 END",
             )
-            ->orderBy("departure_at")
+            ->orderBy('departure_at')
             ->paginate(10)
             ->withQueryString();
 
-        return view("schedules.index", compact("schedules", "q", "status"));
+        return view('schedules.index', compact('schedules', 'q', 'status'));
     }
 
     public function create()
     {
-        return view("schedules.create", $this->formData());
+        return view('schedules.create', $this->formData());
     }
 
     public function store(Request $request)
     {
         $data = $this->validated($request);
-        $data["status"] = "pending";
-        $data["assigned_at"] = now();
+        $data['status'] = 'pending';
+        $data['assigned_at'] = now();
         DB::transaction(function () use ($data, $request) {
             $schedule = Schedule::create($data);
             $schedule->statusLogs()->create([
-                "logged_by" => $request->user()->id,
-                "status" => "pending",
-                "remarks" => "Schedule created.",
-                "logged_at" => now(),
+                'logged_by' => $request->user()->id,
+                'status' => 'pending',
+                'remarks' => 'Schedule created.',
+                'logged_at' => now(),
             ]);
         });
 
         return redirect()
-            ->route("schedules.index")
-            ->with("status", "Schedule created.");
+            ->route('schedules.index')
+            ->with('status', 'Schedule created.');
     }
 
     public function edit(Schedule $schedule)
@@ -84,35 +85,35 @@ class ScheduleController extends Controller
         abort_if(
             in_array(
                 $schedule->status,
-                ["delivered", "cancelled", "en_route"],
+                ['delivered', 'cancelled', 'en_route'],
                 true,
             ),
             403,
         );
+
         return view(
-            "schedules.edit",
-            $this->formData($schedule) + ["schedule" => $schedule],
+            'schedules.edit',
+            $this->formData($schedule) + ['schedule' => $schedule],
         );
     }
 
     public function update(Request $request, Schedule $schedule)
     {
         abort_if(
-            in_array($schedule->status, ["delivered", "cancelled"], true),
+            in_array($schedule->status, ['delivered', 'cancelled'], true),
             403,
         );
 
-        if ($schedule->status === "en_route") {
+        if ($schedule->status === 'en_route') {
             return back()->withErrors([
-                "driver_id" =>
-                    "A trip that is already on the road cannot be edited.",
+                'driver_id' => 'A trip that is already on the road cannot be edited.',
             ]);
         }
 
         $data = $this->validated($request, $schedule);
-        $newDriverId = (int) $data["driver_id"];
+        $newDriverId = (int) $data['driver_id'];
 
-        unset($data["driver_id"]);
+        unset($data['driver_id']);
 
         $driverChanged = $newDriverId !== (int) $schedule->driver_id;
 
@@ -134,38 +135,38 @@ class ScheduleController extends Controller
                 );
             }
         });
+
         return redirect()
-            ->route("schedules.index")
-            ->with("status", "Schedule updated.");
+            ->route('schedules.index')
+            ->with('status', 'Schedule updated.');
     }
 
     public function destroy(Schedule $schedule)
     {
-        if ($schedule->status !== "pending") {
+        if ($schedule->status !== 'pending') {
             return back()->withErrors([
-                "delete" =>
-                    "Only pending schedules can be deleted. This one already has delivery history.",
+                'delete' => 'Only pending schedules can be deleted. This one already has delivery history.',
             ]);
         }
 
         $schedule->delete();
 
         return redirect()
-            ->route("schedules.index")
-            ->with("status", "Schedule deleted.");
+            ->route('schedules.index')
+            ->with('status', 'Schedule deleted.');
     }
 
     public function show(Request $request, Schedule $schedule)
     {
         abort_unless($this->canAccess($request, $schedule), 403);
 
-        $schedule->load(["driver.user", "truck", "statusLogs.loggedBy"]);
+        $schedule->load(['driver.user', 'truck', 'statusLogs.loggedBy']);
         $nextStatuses = $schedule->allowedNext($request->user());
 
-        if ($request->user()->hasRole("driver")) {
+        if ($request->user()->hasRole('driver')) {
             return view(
-                "schedules.driver-show",
-                compact("schedule", "nextStatuses"),
+                'schedules.driver-show',
+                compact('schedule', 'nextStatuses'),
             );
         }
 
@@ -173,24 +174,24 @@ class ScheduleController extends Controller
         $lastDone = collect();
 
         if (
-            !$request->user()->hasRole("driver") &&
+            ! $request->user()->hasRole('driver') &&
             in_array(
                 $schedule->status,
-                ["pending", "accepted", "needs_reassignment"],
+                ['pending', 'accepted', 'needs_reassignment'],
                 true,
             )
         ) {
             $candidates = $this->candidatesFor($schedule);
-            $lastDone = Schedule::where("status", "delivered")
-                ->whereIn("driver_id", $candidates->pluck("id"))
-                ->selectRaw("driver_id, max(updated_at) as last_done")
-                ->groupBy("driver_id")
-                ->pluck("last_done", "driver_id");
+            $lastDone = Schedule::where('status', 'delivered')
+                ->whereIn('driver_id', $candidates->pluck('id'))
+                ->selectRaw('driver_id, max(updated_at) as last_done')
+                ->groupBy('driver_id')
+                ->pluck('last_done', 'driver_id');
         }
 
         return view(
-            "schedules.show",
-            compact("schedule", "nextStatuses", "candidates", "lastDone"),
+            'schedules.show',
+            compact('schedule', 'nextStatuses', 'candidates', 'lastDone'),
         );
     }
 
@@ -202,97 +203,100 @@ class ScheduleController extends Controller
         abort_if(empty($allowed), 403);
 
         $data = $request->validate([
-            "status" => ["required", Rule::in($allowed)],
-            "remarks" => ["nullable", "string", "max:500"],
+            'status' => ['required', Rule::in($allowed)],
+            'remarks' => ['nullable', 'string', 'max:500'],
         ]);
 
-                if ($data["status"] === "en_route") {
-            if ($schedule->truck->status === "maintenance") {
-                return back()->withErrors([
-                    "status" =>
-                        "This truck is in maintenance. Please tell the dispatcher.",
+        if ($data['status'] === 'en_route') {
+            if ($schedule->truck->status === 'maintenance') {
+                throw ValidationException::withMessages([
+                    'status' => 'This truck is in maintenance. Please tell the dispatcher.',
                 ]);
             }
 
-            if ($schedule->driver->status === "off_duty") {
-                return back()->withErrors([
-                    "status" =>
-                        "Your status is Off duty. Please tell the dispatcher.",
+            if ($schedule->driver->status === 'off_duty') {
+                throw ValidationException::withMessages([
+                    'status' => 'Your status is Off duty. Please tell the dispatcher.',
                 ]);
             }
 
-            $busy = Schedule::where("status", "en_route")
-                ->where("id", "!=", $schedule->id)
+            $busy = Schedule::where('status', 'en_route')
+                ->where('id', '!=', $schedule->id)
                 ->where(
-                    fn($q) => $q
-                        ->where("driver_id", $schedule->driver_id)
-                        ->orWhere("truck_id", $schedule->truck_id),
+                    fn ($q) => $q
+                        ->where('driver_id', $schedule->driver_id)
+                        ->orWhere('truck_id', $schedule->truck_id),
                 )
                 ->exists();
 
             if ($busy) {
-                return back()->withErrors([
-                    "status" =>
-                        "This driver or truck is already on another trip. Finish that trip first.",
+                throw ValidationException::withMessages([
+                    'status' => 'This driver or truck is already on another trip. Finish that trip first.',
                 ]);
             }
         }
 
         DB::transaction(function () use ($schedule, $data, $request) {
-            $schedule->update(["status" => $data["status"]]);
+            $schedule->update(['status' => $data['status']]);
             $schedule->statusLogs()->create([
-                "logged_by" => $request->user()->id,
-                "status" => $data["status"],
-                "remarks" => $data["remarks"] ?? null,
-                "logged_at" => now(),
+                'logged_by' => $request->user()->id,
+                'status' => $data['status'],
+                'remarks' => $data['remarks'] ?? null,
+                'logged_at' => now(),
             ]);
-            if ($data["status"] === "en_route") {
-                $schedule->truck->update(["status" => "on_trip"]);
-                $schedule->driver->update(["status" => "on_trip"]);
+            if ($data['status'] === 'en_route') {
+                $schedule->truck->update(['status' => 'on_trip']);
+                $schedule->driver->update(['status' => 'on_trip']);
             } elseif (
-                in_array($data["status"], ["delivered", "cancelled"], true)
+                in_array($data['status'], ['delivered', 'cancelled'], true)
             ) {
-                if ($schedule->truck->status === "on_trip") {
-                    $schedule->truck->update(["status" => "available"]);
+                if ($schedule->truck->status === 'on_trip') {
+                    $schedule->truck->update(['status' => 'available']);
                 }
-                if ($schedule->driver->status === "on_trip") {
-                    $schedule->driver->update(["status" => "available"]);
+                if ($schedule->driver->status === 'on_trip') {
+                    $schedule->driver->update(['status' => 'available']);
                 }
             }
         });
 
         $messages = [
-            "accepted" => "Trip accepted. Thank you!",
-            "en_route" => "Trip started. Drive safe!",
-            "delivered" => "Delivered. Thank you!",
-            "cancelled" => "Trip cancelled.",
+            'accepted' => 'Trip accepted. Thank you!',
+            'en_route' => 'Trip started. Drive safe!',
+            'delivered' => 'Delivered. Thank you!',
+            'cancelled' => 'Trip cancelled.',
         ];
 
-        return back()->with(
-            "status",
-            $messages[$data["status"]] ?? "Delivery status updated.",
-        );
+        $message = $messages[$data['status']] ?? 'Delivery status updated.';
+
+        if ($request->is('api/*')) {
+            return $this->tripResponse($schedule, $message);
+        }
+
+        return back()->with('status', $message);
     }
+
     public function mine(Request $request)
     {
-        $schedules = Schedule::with("truck")
+        $schedules = Schedule::with('truck')
             ->whereHas(
-                "driver",
-                fn($q) => $q->where("user_id", $request->user()->id),
+                'driver',
+                fn ($q) => $q->where('user_id', $request->user()->id),
             )
             ->orderByRaw(
                 "CASE WHEN status IN ('delivered', 'cancelled', 'needs_reassignment') THEN 1 ELSE 0 END",
             )
-            ->orderByDesc("departure_at")
+            ->orderByDesc('departure_at')
             ->paginate(10);
 
-        return view("schedules.mine", compact("schedules"));
+        return view('schedules.mine', compact('schedules'));
     }
+
     private function canAccess(Request $request, Schedule $schedule): bool
     {
         $user = $request->user();
-        return $user->hasRole("admin") ||
-            $user->hasRole("dispatcher") ||
+
+        return $user->hasRole('admin') ||
+            $user->hasRole('dispatcher') ||
             $schedule->driver->user_id === $user->id;
     }
 
@@ -302,46 +306,49 @@ class ScheduleController extends Controller
 
         abort_unless($schedule->driver->user_id === $user->id, 403);
         abort_unless(
-            in_array($schedule->status, ["pending", "accepted"], true),
+            in_array($schedule->status, ['pending', 'accepted'], true),
             403,
         );
 
         $data = $request->validate([
-            "reason" => [
-                "required",
+            'reason' => [
+                'required',
                 Rule::in(array_keys(Schedule::DECLINE_REASONS)),
             ],
-            "details" => [
-                "required_if:reason,other",
-                "nullable",
-                "string",
-                "max:300",
+            'details' => [
+                'required_if:reason,other',
+                'nullable',
+                'string',
+                'max:300',
             ],
         ]);
 
         $isLate = $schedule->departure_at->lte(
-            now()->addHours((int) config("freightpath.late_window_hours", 3)),
+            now()->addHours((int) config('freightpath.late_window_hours', 3)),
         );
         $remarks =
-            Schedule::DECLINE_REASONS[$data["reason"]] .
-            (filled($data["details"] ?? null) ? ": " . $data["details"] : "");
+            Schedule::DECLINE_REASONS[$data['reason']].
+            (filled($data['details'] ?? null) ? ': '.$data['details'] : '');
 
         DB::transaction(function () use ($schedule, $user, $remarks, $isLate) {
-            $schedule->update(["status" => "needs_reassignment"]);
+            $schedule->update(['status' => 'needs_reassignment']);
 
             $schedule->statusLogs()->create([
-                "logged_by" => $user->id,
-                "status" => "needs_reassignment",
-                "remarks" => $remarks,
-                "is_late" => $isLate,
-                "logged_at" => now(),
+                'logged_by' => $user->id,
+                'status' => 'needs_reassignment',
+                'remarks' => $remarks,
+                'is_late' => $isLate,
+                'logged_at' => now(),
             ]);
         });
 
-        return back()->with(
-            "status",
-            "You declined this trip. The dispatcher will assign another driver.",
-        );
+        $message = 'You declined this trip. The dispatcher will assign another driver.';
+
+        if ($request->is('api/*')) {
+            return $this->tripResponse($schedule, $message);
+        }
+
+        return back()->with('status', $message);
     }
 
     public function reassign(Request $request, Schedule $schedule)
@@ -349,32 +356,32 @@ class ScheduleController extends Controller
         abort_unless(
             in_array(
                 $schedule->status,
-                ["pending", "accepted", "needs_reassignment"],
+                ['pending', 'accepted', 'needs_reassignment'],
                 true,
             ),
             403,
         );
 
         $data = $request->validate([
-            "driver_id" => [
-                "required",
-                Rule::in($this->candidatesFor($schedule)->pluck("id")->all()),
+            'driver_id' => [
+                'required',
+                Rule::in($this->candidatesFor($schedule)->pluck('id')->all()),
             ],
-            "note" => ["nullable", "string", "max:300"],
+            'note' => ['nullable', 'string', 'max:300'],
         ]);
 
         DB::transaction(
-            fn() => $this->assignDriver(
+            fn () => $this->assignDriver(
                 $schedule,
-                (int) $data["driver_id"],
+                (int) $data['driver_id'],
                 $request->user(),
-                $data["note"] ?? null,
+                $data['note'] ?? null,
             ),
         );
 
         return redirect()
-            ->route("schedules.show", $schedule)
-            ->with("status", "Trip reassigned. The new driver must accept it.");
+            ->route('schedules.show', $schedule)
+            ->with('status', 'Trip reassigned. The new driver must accept it.');
     }
 
     // Available drivers, excluding the current driver and anyone who already declined this trip.
@@ -383,29 +390,30 @@ class ScheduleController extends Controller
     {
         $declined = $schedule
             ->statusLogs()
-            ->where("status", "needs_reassignment")
-            ->pluck("logged_by");
+            ->where('status', 'needs_reassignment')
+            ->pluck('logged_by');
 
-        $busy = Schedule::whereIn("status", ["pending", "accepted", "en_route"])
-            ->where("id", "!=", $schedule->id)
-            ->where("departure_at", "<", $schedule->expected_arrival_at)
-            ->where("expected_arrival_at", ">", $schedule->departure_at)
-            ->pluck("driver_id");
+        $busy = Schedule::whereIn('status', ['pending', 'accepted', 'en_route'])
+            ->where('id', '!=', $schedule->id)
+            ->where('departure_at', '<', $schedule->expected_arrival_at)
+            ->where('expected_arrival_at', '>', $schedule->departure_at)
+            ->pluck('driver_id');
 
-        return Driver::with("user")
-            ->where("status", "!=", "off_duty")
-            ->where("id", "!=", $schedule->driver_id)
+        return Driver::with('user')
+            ->where('status', '!=', 'off_duty')
+            ->where('id', '!=', $schedule->driver_id)
             ->whereDate(
-                "license_expiry",
-                ">=",
+                'license_expiry',
+                '>=',
                 $schedule->departure_at->toDateString(),
             )
-            ->whereNotIn("user_id", $declined)
-            ->whereNotIn("id", $busy)
+            ->whereNotIn('user_id', $declined)
+            ->whereNotIn('id', $busy)
             ->get()
-            ->sortBy(fn($driver) => $driver->user->name)
+            ->sortBy(fn ($driver) => $driver->user->name)
             ->values();
     }
+
     // Moves the trip to a new driver, back to Pending, and logs it. Call inside a transaction.
     private function assignDriver(
         Schedule $schedule,
@@ -414,90 +422,90 @@ class ScheduleController extends Controller
         ?string $note,
     ): void {
         $oldName =
-            Driver::with("user")->find($schedule->driver_id)?->user->name ??
-            "previous driver";
-        $new = Driver::with("user")->findOrFail($newDriverId);
+            Driver::with('user')->find($schedule->driver_id)?->user->name ??
+            'previous driver';
+        $new = Driver::with('user')->findOrFail($newDriverId);
 
         $schedule->update([
-            "driver_id" => $new->id,
-            "status" => "pending",
-            "assigned_at" => now(),
+            'driver_id' => $new->id,
+            'status' => 'pending',
+            'assigned_at' => now(),
         ]);
 
         $schedule->statusLogs()->create([
-            "logged_by" => $by->id,
-            "status" => "pending",
-            "remarks" =>
-                "Reassigned from {$oldName} to {$new->user->name}." .
-                ($note ? " {$note}" : ""),
-            "logged_at" => now(),
+            'logged_by' => $by->id,
+            'status' => 'pending',
+            'remarks' => "Reassigned from {$oldName} to {$new->user->name}.".
+                ($note ? " {$note}" : ''),
+            'logged_at' => now(),
         ]);
     }
+
     private function validated(
         Request $request,
         ?Schedule $schedule = null,
     ): array {
         $data = $request->validate([
-            "driver_id" => ["required", "exists:drivers,id"],
-            "truck_id" => ["required", "exists:trucks,id"],
-            "origin_address" => ["required", "string"],
-            "destination_address" => ["required", "string"],
-            "departure_at" => ["required", "date"],
-            "expected_arrival_at" => ["required", "date", "after:departure_at"],
+            'driver_id' => ['required', 'exists:drivers,id'],
+            'truck_id' => ['required', 'exists:trucks,id'],
+            'origin_address' => ['required', 'string'],
+            'destination_address' => ['required', 'string'],
+            'departure_at' => ['required', 'date'],
+            'expected_arrival_at' => ['required', 'date', 'after:departure_at'],
         ]);
 
-        $driver = Driver::findOrFail($data["driver_id"]);
-        $truck = Truck::findOrFail($data["truck_id"]);
-        $departure = Carbon::parse($data["departure_at"]);
-        $arrival = Carbon::parse($data["expected_arrival_at"]);
+        $driver = Driver::findOrFail($data['driver_id']);
+        $truck = Truck::findOrFail($data['truck_id']);
+        $departure = Carbon::parse($data['departure_at']);
+        $arrival = Carbon::parse($data['expected_arrival_at']);
         $errors = [];
 
         if (
-            $driver->status === "off_duty" &&
+            $driver->status === 'off_duty' &&
             $driver->id !== $schedule?->driver_id
         ) {
-            $errors["driver_id"] = "This driver is off duty.";
+            $errors['driver_id'] = 'This driver is off duty.';
         } elseif (
             $driver->license_expiry->lt($departure->copy()->startOfDay())
         ) {
-            $errors["driver_id"] =
+            $errors['driver_id'] =
                 "This driver's license expires before the trip departs.";
         }
 
         if (
-            $truck->status === "maintenance" &&
+            $truck->status === 'maintenance' &&
             $truck->id !== $schedule?->truck_id
         ) {
-            $errors["truck_id"] = "This truck is in maintenance.";
+            $errors['truck_id'] = 'This truck is in maintenance.';
         }
 
-        if (!$schedule && $departure->isPast()) {
-            $errors["departure_at"] =
-                "The departure time must be in the future.";
+        if (! $schedule && $departure->isPast()) {
+            $errors['departure_at'] =
+                'The departure time must be in the future.';
         }
 
-        if (!$errors) {
-            $clash = Schedule::whereIn("status", [
-                "pending",
-                "accepted",
-                "en_route",
+        if (! $errors) {
+            $clash = Schedule::whereIn('status', [
+                'pending',
+                'accepted',
+                'en_route',
             ])
                 ->when(
                     $schedule,
-                    fn($q) => $q->where("id", "!=", $schedule->id),
+                    fn ($q) => $q->where('id', '!=', $schedule->id),
                 )
-                ->where("departure_at", "<", $arrival)
-                ->where("expected_arrival_at", ">", $departure)
+                ->where('departure_at', '<', $arrival)
+                ->where('expected_arrival_at', '>', $departure)
                 ->where(
-                    fn($q) => $q
-                        ->where("driver_id", $driver->id)
-                        ->orWhere("truck_id", $truck->id),
+                    fn ($q) => $q
+                        ->where('driver_id', $driver->id)
+                        ->orWhere('truck_id', $truck->id),
                 )
                 ->exists();
 
             if ($clash) {
-                $errors["driver_id"] =
-                    "This driver or truck already has a trip in that time window.";
+                $errors['driver_id'] =
+                    'This driver or truck already has a trip in that time window.';
             }
         }
 
@@ -511,16 +519,25 @@ class ScheduleController extends Controller
     // Dropdown options: active drivers and available trucks (plus the current ones when editing).
     private function formData(?Schedule $schedule = null): array
     {
-        $drivers = Driver::with("user")
-            ->where("status", "!=", "off_duty")
-            ->when($schedule, fn($q) => $q->orWhere("id", $schedule->driver_id))
+        $drivers = Driver::with('user')
+            ->where('status', '!=', 'off_duty')
+            ->when($schedule, fn ($q) => $q->orWhere('id', $schedule->driver_id))
             ->get();
 
-        $trucks = Truck::where("status", "available")
-            ->where("status", "!=", "maintenance")
-            ->when($schedule, fn($q) => $q->orWhere("id", $schedule->truck_id))
+        $trucks = Truck::where('status', 'available')
+            ->where('status', '!=', 'maintenance')
+            ->when($schedule, fn ($q) => $q->orWhere('id', $schedule->truck_id))
             ->get();
 
-        return compact("drivers", "trucks");
+        return compact('drivers', 'trucks');
+    }
+
+    // JSON reply for the phone app: the updated trip plus a message.
+    private function tripResponse(Schedule $schedule, string $message)
+    {
+        $schedule->loadMissing('truck');
+
+        return (new TripResource($schedule))
+            ->additional(['message' => $message]);
     }
 }

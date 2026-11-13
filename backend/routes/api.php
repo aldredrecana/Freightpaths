@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\TripController;
+use App\Http\Controllers\ScheduleController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])
@@ -9,4 +11,11 @@ Route::post('/login', [AuthController::class, 'login'])
 Route::middleware(['auth:sanctum', 'role:driver'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/trips', [TripController::class, 'index']);
+    Route::get('/trips/{schedule}', [TripController::class, 'show']);
+
+    // Same methods the website uses, so the rules stay in one place.
+    Route::post('/trips/{schedule}/status', [ScheduleController::class, 'updateStatus']);
+    Route::post('/trips/{schedule}/decline', [ScheduleController::class, 'decline']);
 });

@@ -12,15 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('drivers', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
-        $table->string('license_no')->unique();
-        $table->date('license_expiry');
-        $table->string('contact_no', 20);
-        $table->text('address');
-        $table->string('status', 20)->default('active');
-        $table->timestamps();
-    });
+            $table->id();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
+            $table->string('license_no')->unique();
+            $table->date('license_expiry');
+            $table->string('contact_no', 20);
+            $table->text('address');
+            $table->string('status', 20)->default('active');
+            $table->timestamps();
+        });
     }
 
     /**
