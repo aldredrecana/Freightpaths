@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
+import * as TaskManager from "expo-task-manager";
+import { Alert, PermissionsAndroid, Platform } from "react-native";
 import { api, ApiError } from "./api";
 import { TOKEN_KEY } from "./config";
 
@@ -13,30 +15,54 @@ type Ping = {
 };
 type Stored = Ping & { schedule_id: number };
 
+const TASK_NAME = "freightpath-location";
 const QUEUE_KEY = "freightpath_ping_queue";
+const ACTIVE_KEY = "freightpath_active_trip";
+const SENT_KEY = "freightpath_last_sent";
 const MAX_QUEUE = 2000; // oldest points are dropped beyond this
 const BATCH = 100; // points per upload
 const GPS_EVERY_MS = 15_000; // ask the phone for a point this often
-const SEND_EVERY_MS = 30_000; // try to upload this often
 
-let watcher: Location.LocationSubscription | null = null;
-let timer: ReturnType<typeof setInterval> | null = null;
-let activeId: number | null = null;
 let flushing = false;
-let lastSent: Date | null = null;
-let queued = 0;
+
+// ---- The background task: Android runs this even when the screen is off ----
+
+TaskManager.defineTask<{ locations: Location.LocationObject[] }>(
+  TASK_NAME,
+  async ({ data, error }) => {
+    if (error || !data) return;
+
+    const tripId = await readActiveTrip();
+    if (tripId === null) return;
+
+    for (const loc of data.locations) {
+      await enqueue({
+        schedule_id: tripId,
+        lat: loc.coords.latitude,
+        lng: loc.coords.longitude,
+        accuracy: loc.coords.accuracy ?? null,
+        speed: loc.coords.speed ?? null,
+        recorded_at: new Date(loc.timestamp).toISOString(),
+      });
+    }
+
+    await flushQueue();
+  },
+);
+
+async function readActiveTrip(): Promise<number | null> {
+  const raw = await AsyncStorage.getItem(ACTIVE_KEY);
+  return raw ? Number(raw) : null;
+}
 
 // ---- The waiting line of points (kept on the phone, so nothing is lost offline) ----
 
 async function readQueue(): Promise<Stored[]> {
   const raw = await AsyncStorage.getItem(QUEUE_KEY);
-  const list: Stored[] = raw ? JSON.parse(raw) : [];
-  queued = list.length;
-  return list;
+  return raw ? JSON.parse(raw) : [];
 }
 
 async function writeQueue(list: Stored[]) {
-  queued = list.length;
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(list));
 }
 
@@ -87,11 +113,11 @@ export async function flushQueue(): Promise<void> {
         // The server refuses these points (for example the trip is no longer on the road).
         const fresh = await readQueue();
         await writeQueue(fresh.slice(n));
-        if (tripId === activeId) await stopTracking(false);
+        if (tripId === (await readActiveTrip())) await stopTracking(false);
         continue;
       }
 
-      lastSent = new Date();
+      await AsyncStorage.setItem(SENT_KEY, new Date().toISOString());
       const fresh = await readQueue();
       await writeQueue(fresh.slice(n));
     }
@@ -102,14 +128,26 @@ export async function flushQueue(): Promise<void> {
 
 // ---- Start / stop ----
 
+function explainBackgroundPermission(): Promise<void> {
+  return new Promise((resolve) => {
+    Alert.alert(
+      "Allow location all the time",
+      'To follow your trip while the screen is off, choose "Allow all the time" on the next screen.',
+      [{ text: "Continue", onPress: () => resolve() }],
+      { cancelable: false },
+    );
+  });
+}
+
 export async function startTracking(
   tripId: number,
 ): Promise<{ ok: boolean; message?: string }> {
-  if (activeId === tripId && watcher) return { ok: true };
-  await stopTracking();
+  const running = await Location.hasStartedLocationUpdatesAsync(TASK_NAME);
+  if (running && (await readActiveTrip()) === tripId) return { ok: true };
+  if (running) await stopTracking();
 
-  const permission = await Location.requestForegroundPermissionsAsync();
-  if (permission.status !== "granted") {
+  const foreground = await Location.requestForegroundPermissionsAsync();
+  if (foreground.status !== "granted") {
     return {
       ok: false,
       message:
@@ -117,40 +155,52 @@ export async function startTracking(
     };
   }
 
-  activeId = tripId;
-  watcher = await Location.watchPositionAsync(
-    {
-      accuracy: Location.Accuracy.Balanced,
-      timeInterval: GPS_EVERY_MS,
-      distanceInterval: 0, // report even when standing still, so rests can be seen
+  const background = await Location.getBackgroundPermissionsAsync();
+  if (background.status !== "granted") {
+    await explainBackgroundPermission();
+    const asked = await Location.requestBackgroundPermissionsAsync();
+    if (asked.status !== "granted") {
+      return {
+        ok: false,
+        message:
+          'To follow your trip while the screen is off, set Location to "Allow all the time" for this app in your phone settings.',
+      };
+    }
+  }
+
+  // Android 13+ needs this to show the "trip in progress" notification.
+  if (Platform.OS === "android" && Platform.Version >= 33) {
+    await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+    );
+  }
+
+  await AsyncStorage.setItem(ACTIVE_KEY, String(tripId));
+  await AsyncStorage.removeItem(SENT_KEY);
+
+  await Location.startLocationUpdatesAsync(TASK_NAME, {
+    accuracy: Location.Accuracy.Balanced,
+    timeInterval: GPS_EVERY_MS,
+    distanceInterval: 0, // report even when standing still, so rests can be seen
+    showsBackgroundLocationIndicator: true,
+    foregroundService: {
+      notificationTitle: "FreightPath trip in progress",
+      notificationBody:
+        "Your location is shared with the dispatcher until you mark the trip delivered.",
+      notificationColor: "#1d4ed8",
     },
-    (loc) => {
-      enqueue({
-        schedule_id: tripId,
-        lat: loc.coords.latitude,
-        lng: loc.coords.longitude,
-        accuracy: loc.coords.accuracy ?? null,
-        speed: loc.coords.speed ?? null,
-        recorded_at: new Date(loc.timestamp).toISOString(),
-      });
-    },
-  );
-  timer = setInterval(flushQueue, SEND_EVERY_MS);
+  });
 
   return { ok: true };
 }
 
 export async function stopTracking(flushFirst = true): Promise<void> {
-  watcher?.remove();
-  watcher = null;
-
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
+  if (await Location.hasStartedLocationUpdatesAsync(TASK_NAME)) {
+    await Location.stopLocationUpdatesAsync(TASK_NAME);
   }
 
-  activeId = null;
   if (flushFirst) await flushQueue();
+  await AsyncStorage.removeItem(ACTIVE_KEY);
 }
 
 // Call this with the driver's trips: tracking runs only while a trip is on the way.
@@ -166,6 +216,17 @@ export async function syncTracking(
   return { ok: true };
 }
 
-export function getTrackingInfo() {
-  return { activeId, lastSent, queued };
+export async function getTrackingInfo() {
+  const [active, running, sent, queue] = await Promise.all([
+    AsyncStorage.getItem(ACTIVE_KEY),
+    Location.hasStartedLocationUpdatesAsync(TASK_NAME),
+    AsyncStorage.getItem(SENT_KEY),
+    AsyncStorage.getItem(QUEUE_KEY),
+  ]);
+
+  return {
+    activeId: running && active ? Number(active) : null,
+    lastSent: sent ? new Date(sent) : null,
+    queued: queue ? (JSON.parse(queue) as unknown[]).length : 0,
+  };
 }
