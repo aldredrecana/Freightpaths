@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ApiError } from "../api";
 import { useAuth } from "../auth";
 import { StatusBadge } from "../components/StatusBadge";
+import { syncTracking } from "../tracking";
 import { formatDate, type Trip } from "../types";
 import { useApi } from "../useApi";
 
@@ -21,6 +22,7 @@ export default function TripsScreen() {
   const call = useApi();
   const [trips, setTrips] = useState<Trip[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   async function load() {
@@ -62,6 +64,12 @@ export default function TripsScreen() {
         <Pressable style={styles.errorBox} onPress={load}>
           <Text style={styles.errorText}>{error} Tap to try again.</Text>
         </Pressable>
+      )}
+
+      {warning && (
+        <View style={styles.warningBox}>
+          <Text style={styles.warningText}>{warning}</Text>
+        </View>
       )}
 
       <FlatList
@@ -145,4 +153,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fee2e2",
   },
   errorText: { color: "#991b1b", fontSize: 16 },
+
+  warningBox: {
+    margin: 16,
+    marginBottom: 0,
+    padding: 14,
+    borderRadius: 10,
+    backgroundColor: "#fef3c7",
+  },
+  warningText: { color: "#92400e", fontSize: 16 },
 });

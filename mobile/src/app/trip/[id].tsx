@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { ApiError } from "../../api";
 import { StatusBadge } from "../../components/StatusBadge";
+import { startTracking, stopTracking } from "../../tracking";
+import { useTrackingInfo } from "../../useTrackingInfo";
 import {
   ACTION_LABEL,
   formatDate,
@@ -22,6 +24,7 @@ import { useApi } from "../../useApi";
 export default function TripDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const call = useApi();
+  const tracking = useTrackingInfo();
   const [trip, setTrip] = useState<Trip | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -52,6 +55,15 @@ export default function TripDetail() {
         body: { status },
       });
       setMessage(res.message);
+
+      // Share location only while the trip is on the way.
+      if (status === "en_route") {
+        const started = await startTracking(Number(id));
+        if (!started.ok) setError(started.message ?? null);
+      } else if (status === "delivered") {
+        await stopTracking();
+      }
+
       await load(); // reload so the timeline shows the new entry
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Something went wrong.");
@@ -126,6 +138,37 @@ export default function TripDetail() {
         )}
       </View>
 
+      {trip.status === "en_route" && (
+        <View style={styles.card}>
+          {tracking.activeId === trip.id ? (
+            <>
+              <Text style={styles.heading}>Sharing your location</Text>
+              <Text style={styles.logWhen}>
+                {tracking.lastSent
+                  ? `Last sent ${tracking.lastSent.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })}`
+                  : "Waiting for the first GPS point..."}
+                {tracking.queued > 0
+                  ? ` · ${tracking.queued} waiting to send`
+                  : ""}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.heading}>Location sharing is off</Text>
+              <Pressable
+                style={styles.secondary}
+                onPress={async () => {
+                  const started = await startTracking(trip.id);
+                  if (!started.ok) setError(started.message ?? null);
+                }}
+              >
+                <Text style={styles.secondaryText}>Turn on</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      )}
+
       {next && (
         <Pressable
           style={[styles.action, busy && styles.disabled]}
@@ -185,6 +228,15 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.6 },
   actionText: { color: "#fff", fontSize: 22, fontWeight: "800" },
+  secondary: {
+    marginTop: 10,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: "#e2e8f0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secondaryText: { fontSize: 18, fontWeight: "700", color: "#334155" },
   okBox: { padding: 14, borderRadius: 10, backgroundColor: "#dcfce7" },
   okText: { color: "#166534", fontSize: 17, fontWeight: "600" },
   errorBox: { padding: 14, borderRadius: 10, backgroundColor: "#fee2e2" },

@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { api, ApiError } from "./api";
+import { TOKEN_KEY } from "./config";
 
 export type User = {
   id: number;
@@ -24,7 +25,6 @@ type AuthState = {
   signOut: () => Promise<void>;
 };
 
-const TOKEN_KEY = "freightpath_token";
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
