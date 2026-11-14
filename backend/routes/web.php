@@ -8,6 +8,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\TruckController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TrackingController;
 
 Route::get(
     '/',
@@ -99,3 +100,8 @@ Route::middleware(['auth', 'role:admin,dispatcher'])
     ->get('/trucks/{truck}', [TruckController::class, 'show'])
     ->whereNumber('truck')
     ->name('trucks.show');
+
+Route::middleware(["auth", "role:admin,dispatcher"])
+    ->get("/schedules/{schedule}/tracking", [TrackingController::class, "show"])
+    ->whereNumber("schedule")
+    ->name("schedules.tracking");

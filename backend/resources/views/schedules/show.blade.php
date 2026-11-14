@@ -117,12 +117,14 @@
                     <h3 class="font-semibold text-gray-800">
                         {{ $schedule->status === 'needs_reassignment' ? 'Find a replacement driver' : 'Reassign driver' }}
                     </h3>
-                    <p class="mb-4 mt-1 text-sm text-gray-500">Off-duty drivers and drivers with overlapping trips are not
+                    <p class="mb-4 mt-1 text-sm text-gray-500">Off-duty drivers and drivers with overlapping trips are
+                        not
                         listed. Call the driver first. They must still accept the trip.</p>
 
                     @if ($candidates->isEmpty())
-                        <p class="text-sm text-red-700">No driver is free for this trip's time. You can postpone the trip
-                             (Edit) or cancel it.</p>
+                        <p class="text-sm text-red-700">No driver is free for this trip's time. You can postpone the
+                            trip
+                            (Edit) or cancel it.</p>
                     @else
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="md:col-span-2">
@@ -147,6 +149,145 @@
                         <div class="mt-4"><x-primary-button>Reassign</x-primary-button></div>
                     @endif
                 </form>
+            @endif
+
+            @if (in_array($schedule->status, ['en_route', 'delivered'], true))
+                <div id="tracking-card" class="bg-white shadow-sm sm:rounded-lg p-6"
+                    data-url="{{ route('schedules.tracking', $schedule) }}"
+                    data-live="{{ $schedule->status === 'en_route' ? '1' : '0' }}">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <h3 class="font-semibold text-gray-800">Location &amp; rests</h3>
+                        <span id="tracking-state"
+                            class="text-sm rounded-md px-2.5 py-1 bg-gray-100 text-gray-600">Loading...</span>
+                    </div>
+                    <p id="tracking-message" class="text-sm text-gray-600 mb-3"></p>
+                    <div id="tracking-map" style="height: 20rem; z-index: 0;"
+                        class="w-full rounded-lg border border-gray-200"></div>
+                    <h4 class="mt-5 mb-2 text-sm font-semibold text-gray-800">Rest periods</h4>
+                    <ul id="tracking-rests" class="text-sm text-gray-700"></ul>
+                </div>
+
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+                    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+                <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+                    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+                <script>
+                    (function() {
+                        const card = document.getElementById('tracking-card');
+                        const url = card.dataset.url;
+                        const live = card.dataset.live === '1';
+
+                        const pill = {
+                            resting: 'bg-amber-100 text-amber-800',
+                            tracking: 'bg-blue-50 text-blue-700',
+                            offline: 'bg-red-100 text-red-800',
+                            finished: 'bg-emerald-50 text-emerald-700',
+                            waiting: 'bg-gray-100 text-gray-600',
+                        };
+
+                        const map = L.map('tracking-map').setView([12.88, 121.77], 6);
+                        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 19,
+                            attribution: '&copy; OpenStreetMap contributors',
+                        }).addTo(map);
+
+                        const layer = L.layerGroup().addTo(map);
+                        let fitted = false;
+
+                        function render(d) {
+                            layer.clearLayers();
+
+                            const stateEl = document.getElementById('tracking-state');
+                            stateEl.textContent = d.label;
+                            stateEl.className = 'text-sm rounded-md px-2.5 py-1 ' + (pill[d.state] || pill.waiting);
+                            document.getElementById('tracking-message').textContent = d.message;
+
+                            const bounds = [];
+
+                            if (d.path.length > 1) {
+                                L.polyline(d.path, {
+                                    color: '#2563eb',
+                                    weight: 4,
+                                    opacity: 0.8
+                                }).addTo(layer);
+                            }
+                            if (d.path.length) {
+                                bounds.push(d.path[0]);
+                                L.circleMarker(d.path[0], {
+                                        radius: 7,
+                                        color: '#047857',
+                                        fillColor: '#10b981',
+                                        fillOpacity: 1
+                                    })
+                                    .bindTooltip('Start of tracking').addTo(layer);
+                            }
+
+                            d.rests.forEach(function(r, i) {
+                                bounds.push([r.lat, r.lng]);
+                                L.circleMarker([r.lat, r.lng], {
+                                        radius: 11,
+                                        color: '#b45309',
+                                        fillColor: '#f59e0b',
+                                        fillOpacity: 0.85
+                                    })
+                                    .bindTooltip('Rest ' + (i + 1) + ': ' + r.minutes + ' min').addTo(layer);
+                            });
+
+                            if (d.last) {
+                                bounds.push([d.last.lat, d.last.lng]);
+                                L.circleMarker([d.last.lat, d.last.lng], {
+                                        radius: 9,
+                                        weight: 3,
+                                        color: '#1d4ed8',
+                                        fillColor: '#3b82f6',
+                                        fillOpacity: 1
+                                    })
+                                    .bindTooltip('Last known position').addTo(layer);
+                            }
+
+                            if (bounds.length && !fitted) {
+                                map.fitBounds(bounds, {
+                                    padding: [30, 30],
+                                    maxZoom: 16
+                                });
+                                fitted = true;
+                            }
+
+                            const list = document.getElementById('tracking-rests');
+                            list.replaceChildren();
+                            if (!d.rests.length) {
+                                const li = document.createElement('li');
+                                li.textContent = 'No rest periods yet.';
+                                list.appendChild(li);
+                            }
+                            d.rests.forEach(function(r, i) {
+                                const li = document.createElement('li');
+                                li.textContent = 'Rest ' + (i + 1) + ': ' + r.from + ' to ' + r.to + ' (' + r.minutes +
+                                    ' min)';
+                                list.appendChild(li);
+                            });
+                        }
+
+                        async function load() {
+                            try {
+                                const res = await fetch(url, {
+                                    headers: {
+                                        Accept: 'application/json'
+                                    },
+                                    credentials: 'same-origin'
+                                });
+                                if (!res.ok) throw new Error('HTTP ' + res.status);
+                                render(await res.json());
+                            } catch (e) {
+                                document.getElementById('tracking-message').textContent =
+                                    'Could not load tracking data. Retrying...';
+                            }
+                        }
+
+                        load();
+                        if (live) setInterval(load, 15000);
+                    })();
+                </script>
             @endif
 
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
