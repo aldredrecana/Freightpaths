@@ -44,7 +44,11 @@
                 <rect x="13" y="4" width="7" height="7" rx="1" />
                 <rect x="4" y="13" width="7" height="7" rx="1" />
                 <rect x="13" y="13" width="7" height="7" rx="1" />
-        @endswitch
-    </svg>
-    <span>{{ $slot }}</span>
-</a>
+                @case('map')
+                    <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z" />
+                    <path d="M9 3v15M15 6v15" />
+                @break
+            @endswitch
+        </svg>
+        <span>{{ $slot }}</span>
+    </a>

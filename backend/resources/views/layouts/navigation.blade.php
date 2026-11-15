@@ -10,6 +10,7 @@
             ['Drivers', 'drivers.index', 'drivers.*', 'users'],
             ['Trucks', 'trucks.index', 'trucks.*', 'truck'],
             ['Schedules', 'schedules.index', 'schedules.*', 'calendar'],
+            ['Map', 'map.index', 'map.*', 'map'],
             ['Transactions', 'transactions.index', 'transactions.*', 'history'],
         ];
     $initials = collect(preg_split('/\s+/', trim($user->name)))

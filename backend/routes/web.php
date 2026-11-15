@@ -9,6 +9,8 @@ use App\Http\Controllers\TruckController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\MapController;
+
 
 Route::get(
     '/',
@@ -105,3 +107,8 @@ Route::middleware(["auth", "role:admin,dispatcher"])
     ->get("/schedules/{schedule}/tracking", [TrackingController::class, "show"])
     ->whereNumber("schedule")
     ->name("schedules.tracking");
+
+Route::middleware(["auth", "role:admin,dispatcher"])->group(function () {
+    Route::get("/map", [MapController::class, "index"])->name("map.index");
+    Route::get("/map/data", [MapController::class, "data"])->name("map.data");
+});
