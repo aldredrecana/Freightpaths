@@ -8,6 +8,7 @@ use App\Models\Schedule;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
+use Carbon\CarbonInterface;
 
 /** The phone's GPS upload: who may send, what is stored, and how rests are found. */
 class LocationApiTest extends TestCase
@@ -34,7 +35,7 @@ class LocationApiTest extends TestCase
         return [$driver, $trip];
     }
 
-    private function point(Carbon $start, int $minute, float $lat): array
+    private function point(CarbonInterface $start, int $minute, float $lat): array
     {
         return [
             'lat' => $lat,

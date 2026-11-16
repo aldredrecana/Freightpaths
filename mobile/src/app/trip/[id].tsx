@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { ApiError } from "../../api";
@@ -21,6 +22,14 @@ import {
 } from "../../types";
 import { useApi } from "../../useApi";
 
+// Same reasons as the website.
+const DECLINE_REASONS = [
+  { value: "sick", label: "Sick" },
+  { value: "emergency", label: "Emergency" },
+  { value: "vehicle_problem", label: "Vehicle problem" },
+  { value: "other", label: "Other" },
+];
+
 export default function TripDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const call = useApi();
@@ -29,6 +38,10 @@ export default function TripDetail() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const [declining, setDeclining] = useState(false);
+  const [reason, setReason] = useState<string | null>(null);
+  const [details, setDetails] = useState("");
 
   async function load() {
     try {
@@ -84,6 +97,47 @@ export default function TripDetail() {
       );
     } else {
       changeStatus(next);
+    }
+  }
+
+  function confirmDecline() {
+    if (!reason) {
+      setError("Please choose a reason.");
+      return;
+    }
+    if (reason === "other" && !details.trim()) {
+      setError('Please write the details for "Other".');
+      return;
+    }
+
+    Alert.alert(
+      "Decline this trip?",
+      "The dispatcher will assign another driver.",
+      [
+        { text: "Keep trip", style: "cancel" },
+        { text: "Yes, decline", style: "destructive", onPress: sendDecline },
+      ],
+    );
+  }
+
+  async function sendDecline() {
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await call<{ message: string }>(`/trips/${id}/decline`, {
+        method: "POST",
+        body: { reason, details: details.trim() || null },
+      });
+      setMessage(res.message);
+      setDeclining(false);
+      setReason(null);
+      setDetails("");
+      await load(); // the trip now shows as declined, with a new timeline entry
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Something went wrong.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -183,6 +237,67 @@ export default function TripDetail() {
         </Pressable>
       )}
 
+      {trip.can_decline &&
+        (declining ? (
+          <View style={styles.card}>
+            <Text style={styles.heading}>Why are you declining?</Text>
+            {DECLINE_REASONS.map((r) => (
+              <Pressable
+                key={r.value}
+                style={[styles.reason, reason === r.value && styles.reasonOn]}
+                onPress={() => setReason(r.value)}
+              >
+                <Text
+                  style={[
+                    styles.reasonText,
+                    reason === r.value && styles.reasonTextOn,
+                  ]}
+                >
+                  {r.label}
+                </Text>
+              </Pressable>
+            ))}
+            <TextInput
+              style={styles.input}
+              placeholder={
+                reason === "other" ? "Details (required)" : "Details (optional)"
+              }
+              multiline
+              maxLength={300}
+              value={details}
+              onChangeText={setDetails}
+            />
+            <Pressable
+              style={[styles.danger, busy && styles.disabled]}
+              disabled={busy}
+              onPress={confirmDecline}
+            >
+              {busy ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.dangerText}>Send decline</Text>
+              )}
+            </Pressable>
+            <Pressable
+              style={styles.secondary}
+              onPress={() => setDeclining(false)}
+            >
+              <Text style={styles.secondaryText}>Cancel</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            style={styles.declineLink}
+            onPress={() => {
+              setDeclining(true);
+              setError(null);
+              setMessage(null);
+            }}
+          >
+            <Text style={styles.declineLinkText}>Decline this trip</Text>
+          </Pressable>
+        ))}
+
       <View style={styles.card}>
         <Text style={styles.heading}>Timeline</Text>
         {(trip.history ?? []).map((log, i) => (
@@ -245,4 +360,45 @@ const styles = StyleSheet.create({
   logTitle: { fontSize: 17, fontWeight: "700", color: "#0f172a" },
   logWhen: { fontSize: 14, color: "#64748b" },
   logNote: { fontSize: 15, color: "#334155", marginTop: 2 },
+
+  reason: {
+    marginTop: 10,
+    height: 54,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#cbd5e1",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  reasonOn: { borderColor: "#b91c1c", backgroundColor: "#fee2e2" },
+  reasonText: { fontSize: 18, color: "#334155" },
+  reasonTextOn: { color: "#991b1b", fontWeight: "700" },
+  input: {
+    marginTop: 12,
+    minHeight: 90,
+    borderWidth: 1.5,
+    borderColor: "#cbd5e1",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 17,
+    textAlignVertical: "top",
+  },
+  danger: {
+    marginTop: 12,
+    height: 60,
+    borderRadius: 14,
+    backgroundColor: "#b91c1c",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dangerText: { color: "#fff", fontSize: 20, fontWeight: "800" },
+  declineLink: {
+    height: 56,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#b91c1c",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  declineLinkText: { color: "#b91c1c", fontSize: 18, fontWeight: "700" },
 });
