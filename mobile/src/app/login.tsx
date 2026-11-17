@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { ApiError } from "../api";
 import { useAuth } from "../auth";
+import { getApiUrl, normalizeApiUrl, setApiUrl } from "../server";
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
@@ -17,6 +18,40 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showServer, setShowServer] = useState(false);
+  const [serverInput, setServerInput] = useState("");
+  const [serverNote, setServerNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    getApiUrl().then(setServerInput);
+  }, []);
+
+  // Saves a new server address, but only after checking that it answers.
+  async function saveServer() {
+    const url = normalizeApiUrl(serverInput);
+    setServerNote("Checking...");
+
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(`${url}/me`, {
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      // Our server answers 401 ("not logged in") on this address.
+      if (res.status !== 401) throw new Error("Not a FreightPath server");
+
+      await setApiUrl(url);
+      setServerInput(url);
+      setServerNote("Saved. The server answered.");
+    } catch {
+      setServerNote(
+        "Cannot reach that address. Check it and your internet connection.",
+      );
+    }
+  }
 
   async function onSubmit() {
     if (busy) return;
@@ -83,6 +118,28 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>Log in</Text>
         )}
       </Pressable>
+
+      <Pressable onPress={() => setShowServer(!showServer)}>
+        <Text style={styles.serverLink}>Server settings</Text>
+      </Pressable>
+
+      {showServer && (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Server address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            value={serverInput}
+            onChangeText={setServerInput}
+          />
+          <Pressable style={styles.serverButton} onPress={saveServer}>
+            <Text style={styles.serverButtonText}>Save and test</Text>
+          </Pressable>
+          {serverNote && <Text style={styles.serverNote}>{serverNote}</Text>}
+        </>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -116,4 +173,26 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: "#fff", fontSize: 20, fontWeight: "700" },
+
+  serverLink: {
+    marginTop: 28,
+    textAlign: "center",
+    fontSize: 16,
+    color: "#64748b",
+    textDecorationLine: "underline",
+  },
+  serverButton: {
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: "#e2e8f0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  serverButtonText: { fontSize: 18, fontWeight: "700", color: "#334155" },
+  serverNote: {
+    marginTop: 10,
+    fontSize: 15,
+    color: "#475569",
+    textAlign: "center",
+  },
 });

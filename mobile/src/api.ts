@@ -1,4 +1,4 @@
-import { API_URL } from "./config";
+import { getApiUrl } from "./server";
 
 export class ApiError extends Error {
   status: number;
@@ -24,7 +24,7 @@ export async function api<T>(
   const timer = setTimeout(() => controller.abort(), 15000);
 
   try {
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await fetch(`${await getApiUrl()}${path}`, {
       method,
       headers: {
         Accept: "application/json",
