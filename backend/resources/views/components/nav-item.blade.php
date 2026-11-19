@@ -1,7 +1,10 @@
 @props(['href', 'active' => false, 'icon' => 'grid'])
 
 <a href="{{ $href }}"
-    class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition {{ $active ? 'bg-white/10 text-white' : 'text-blue-100/80 hover:bg-white/5 hover:text-white' }}">
+    class="relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition {{ $active ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white' }}">
+    @if ($active)
+        <span class="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-brand-500"></span>
+    @endif
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor"
         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         @switch($icon)
@@ -33,10 +36,9 @@
                 <path d="M12 7v5l3 2" />
             @break
 
-            @case('history')
-                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-                <path d="M3 3v5h5" />
-                <path d="M12 7v5l3 2" />
+            @case('map')
+                <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z" />
+                <path d="M9 3v15M15 6v15" />
             @break
 
             @default
@@ -44,11 +46,7 @@
                 <rect x="13" y="4" width="7" height="7" rx="1" />
                 <rect x="4" y="13" width="7" height="7" rx="1" />
                 <rect x="13" y="13" width="7" height="7" rx="1" />
-                @case('map')
-                    <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z" />
-                    <path d="M9 3v15M15 6v15" />
-                @break
-            @endswitch
-        </svg>
-        <span>{{ $slot }}</span>
-    </a>
+        @endswitch
+    </svg>
+    <span>{{ $slot }}</span>
+</a>

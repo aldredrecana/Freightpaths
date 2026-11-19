@@ -13,7 +13,7 @@
                 </div>
                 @if (auth()->user()->hasRole('admin'))
                     <a href="{{ route('drivers.create') }}"
-                        class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+                        class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-3 text-sm font-semibold text-white hover:bg-brand-700">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                             <path d="M12 5v14M5 12h14" />
@@ -27,7 +27,7 @@
                 $stats = [
                     ['Total drivers', $counts->sum(), null],
                     ['Available', $counts->get('available', 0), 'bg-emerald-500'],
-                    ['On trip', $counts->get('on_trip', 0), 'bg-blue-500'],
+                    ['On trip', $counts->get('on_trip', 0), 'bg-brand-500'],
                     ['Off duty', $counts->get('off_duty', 0), 'bg-gray-400'],
                 ];
             @endphp
@@ -61,14 +61,14 @@
                         </svg>
                         <input type="text" name="q" value="{{ $q }}"
                             placeholder="Search by name, license, or phone..."
-                            class="w-full rounded-lg border border-gray-200 py-3 pl-11 pr-4 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500">
+                            class="w-full rounded-lg border border-gray-200 py-3 pl-11 pr-4 text-sm placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500">
                     </div>
                     <div class="flex items-center gap-4">
                         @if ($q !== '' || $status)
                             <a href="{{ route('drivers.index') }}" class="text-sm text-gray-500 underline">Clear</a>
                         @endif
                         <select name="status" onchange="this.form.submit()"
-                            class="rounded-lg border border-gray-200 py-3 pl-4 pr-10 text-sm text-gray-700 focus:border-blue-500 focus:ring-blue-500">
+                            class="rounded-lg border border-gray-200 py-3 pl-4 pr-10 text-sm text-gray-700 focus:border-brand-500 focus:ring-brand-500">
                             <option value="">All statuses</option>
                             @foreach (['available' => 'Available', 'on_trip' => 'On trip', 'off_duty' => 'Off duty'] as $value => $label)
                                 <option value="{{ $value }}" @selected($status === $value)>{{ $label }}

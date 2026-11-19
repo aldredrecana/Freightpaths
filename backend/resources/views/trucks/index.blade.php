@@ -15,7 +15,7 @@
                 $stats = [
                     ['Total trucks', $counts->sum(), null],
                     ['Available', $counts->get('available', 0), 'bg-emerald-500'],
-                    ['On trip', $counts->get('on_trip', 0), 'bg-blue-500'],
+                    ['On trip', $counts->get('on_trip', 0), 'bg-brand-500'],
                     ['Maintenance', $counts->get('maintenance', 0), 'bg-amber-500'],
                 ];
             @endphp
@@ -52,14 +52,14 @@
                             </svg>
                             <input type="text" name="q" value="{{ $q }}"
                                 placeholder="Search by plate number or model..."
-                                class="w-full rounded-lg border border-gray-200 py-3 pl-11 pr-4 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500">
+                                class="w-full rounded-lg border border-gray-200 py-3 pl-11 pr-4 text-sm placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500">
                         </div>
                         <div class="flex items-center gap-4">
                             @if ($q !== '' || $status)
                                 <a href="{{ route('trucks.index') }}" class="text-sm text-gray-500 underline">Clear</a>
                             @endif
                             <select name="status" onchange="this.form.submit()"
-                                class="rounded-lg border border-gray-200 py-3 pl-4 pr-10 text-sm text-gray-700 focus:border-blue-500 focus:ring-blue-500">
+                                class="rounded-lg border border-gray-200 py-3 pl-4 pr-10 text-sm text-gray-700 focus:border-brand-500 focus:ring-brand-500">
                                 <option value="">All statuses</option>
                                 @foreach (['available' => 'Available', 'on_trip' => 'On trip', 'maintenance' => 'Maintenance'] as $value => $label)
                                     <option value="{{ $value }}" @selected($status === $value)>{{ $label }}

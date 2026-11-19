@@ -5,7 +5,7 @@
         ->take(2)
         ->implode('');
     $palette = [
-        'bg-blue-100 text-blue-700',
+        'bg-brand-100 text-brand-700',
         'bg-violet-100 text-violet-700',
         'bg-emerald-100 text-emerald-700',
         'bg-amber-100 text-amber-700',

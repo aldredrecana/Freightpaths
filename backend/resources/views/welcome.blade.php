@@ -186,28 +186,28 @@
                     --color-sky-800: oklch(44.3% .11 240.79);
                     --color-sky-900: oklch(39.1% .09 240.876);
                     --color-sky-950: oklch(29.3% .066 243.157);
-                    --color-blue-50: oklch(97% .014 254.604);
-                    --color-blue-100: oklch(93.2% .032 255.585);
-                    --color-blue-200: oklch(88.2% .059 254.128);
-                    --color-blue-300: oklch(80.9% .105 251.813);
-                    --color-blue-400: oklch(70.7% .165 254.624);
-                    --color-blue-500: oklch(62.3% .214 259.815);
-                    --color-blue-600: oklch(54.6% .245 262.881);
-                    --color-blue-700: oklch(48.8% .243 264.376);
-                    --color-blue-800: oklch(42.4% .199 265.638);
-                    --color-blue-900: oklch(37.9% .146 265.522);
-                    --color-blue-950: oklch(28.2% .091 267.935);
-                    --color-indigo-50: oklch(96.2% .018 272.314);
-                    --color-indigo-100: oklch(93% .034 272.788);
-                    --color-indigo-200: oklch(87% .065 274.039);
-                    --color-indigo-300: oklch(78.5% .115 274.713);
-                    --color-indigo-400: oklch(67.3% .182 276.935);
-                    --color-indigo-500: oklch(58.5% .233 277.117);
-                    --color-indigo-600: oklch(51.1% .262 276.966);
-                    --color-indigo-700: oklch(45.7% .24 277.023);
-                    --color-indigo-800: oklch(39.8% .195 277.366);
-                    --color-indigo-900: oklch(35.9% .144 278.697);
-                    --color-indigo-950: oklch(25.7% .09 281.288);
+                    --color-brand-50: oklch(97% .014 254.604);
+                    --color-brand-100: oklch(93.2% .032 255.585);
+                    --color-brand-200: oklch(88.2% .059 254.128);
+                    --color-brand-300: oklch(80.9% .105 251.813);
+                    --color-brand-400: oklch(70.7% .165 254.624);
+                    --color-brand-500: oklch(62.3% .214 259.815);
+                    --color-brand-600: oklch(54.6% .245 262.881);
+                    --color-brand-700: oklch(48.8% .243 264.376);
+                    --color-brand-800: oklch(42.4% .199 265.638);
+                    --color-brand-900: oklch(37.9% .146 265.522);
+                    --color-brand-950: oklch(28.2% .091 267.935);
+                    --color-brand-50: oklch(96.2% .018 272.314);
+                    --color-brand-100: oklch(93% .034 272.788);
+                    --color-brand-200: oklch(87% .065 274.039);
+                    --color-brand-300: oklch(78.5% .115 274.713);
+                    --color-brand-400: oklch(67.3% .182 276.935);
+                    --color-brand-500: oklch(58.5% .233 277.117);
+                    --color-brand-600: oklch(51.1% .262 276.966);
+                    --color-brand-700: oklch(45.7% .24 277.023);
+                    --color-brand-800: oklch(39.8% .195 277.366);
+                    --color-brand-900: oklch(35.9% .144 278.697);
+                    --color-brand-950: oklch(25.7% .09 281.288);
                     --color-violet-50: oklch(96.9% .016 293.756);
                     --color-violet-100: oklch(94.3% .029 294.588);
                     --color-violet-200: oklch(89.4% .057 293.283);
@@ -1529,8 +1529,8 @@
                     }
                 }
 
-                .focus\:border-blue-300:focus {
-                    border-color: var(--color-blue-300)
+                .focus\:border-brand-300:focus {
+                    border-color: var(--color-brand-300)
                 }
 
                 .focus\:ring:focus {
@@ -1834,12 +1834,12 @@
                         }
                     }
 
-                    .dark\:focus\:border-blue-700:focus {
-                        border-color: var(--color-blue-700)
+                    .dark\:focus\:border-brand-700:focus {
+                        border-color: var(--color-brand-700)
                     }
 
-                    .dark\:focus\:border-blue-800:focus {
-                        border-color: var(--color-blue-800)
+                    .dark\:focus\:border-brand-800:focus {
+                        border-color: var(--color-brand-800)
                     }
 
                     .dark\:active\:bg-gray-700:active {

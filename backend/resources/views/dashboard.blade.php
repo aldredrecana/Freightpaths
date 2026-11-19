@@ -91,7 +91,7 @@
                 <x-card class="lg:col-span-2">
                     <div class="flex items-center justify-between px-6 pt-6">
                         <h2 class="text-lg font-semibold text-[#12263F]">Today's trips</h2>
-                        <a href="{{ route('schedules.index') }}" class="text-sm text-blue-600 hover:underline">View
+                        <a href="{{ route('schedules.index') }}" class="text-sm text-brand-600 hover:underline">View
                             all</a>
                     </div>
                     <div class="mt-3 divide-y divide-gray-100 text-sm">

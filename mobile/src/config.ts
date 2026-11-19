@@ -1,7 +1,7 @@
 // Default server address. The address can also be changed in the app, on the
 // login screen under "Server settings" (see src/server.ts).
 export const DEFAULT_API_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? "http://192.168.1.6:8000/api";
+  process.env.EXPO_PUBLIC_API_URL ?? "http://192.168.1.4:8000/api";
 
 // Where the login token is kept on the phone.
 export const TOKEN_KEY = "freightpath_token";

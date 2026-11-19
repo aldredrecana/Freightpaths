@@ -12,10 +12,10 @@
                         {{ $current->destination_address }}</p>
                     <p class="mt-1 text-lg text-gray-700">{{ $current->departure_at->calendar() }} &middot;
                         {{ $current->truck->plate_no }}</p>
-                    <p class="mt-1 text-lg font-semibold text-blue-800">
+                    <p class="mt-1 text-lg font-semibold text-brand-800">
                         {{ $current->status === 'en_route' ? 'On the way' : 'Accepted' }}</p>
                     <a href="{{ route('schedules.show', $current) }}"
-                        class="mt-5 block w-full rounded-2xl bg-blue-700 py-5 text-center text-xl font-bold text-white">Open
+                        class="mt-5 block w-full rounded-2xl bg-brand-700 py-5 text-center text-xl font-bold text-white">Open
                         trip</a>
                 @else
                     <p class="mt-3 text-xl text-gray-700">No active trip right now.</p>
@@ -30,7 +30,7 @@
                         <p class="text-lg font-semibold text-gray-900">{{ $trip->origin_address }} &rarr;
                             {{ $trip->destination_address }}</p>
                         <p class="text-base text-gray-700">{{ $trip->departure_at->calendar() }}</p>
-                        <p class="mt-1 text-base font-semibold text-blue-800">Waiting for you to accept</p>
+                        <p class="mt-1 text-base font-semibold text-brand-800">Waiting for you to accept</p>
                     </a>
                 @empty
                     <p class="mt-3 text-lg text-gray-600">No new trips.</p>

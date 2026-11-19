@@ -5,7 +5,7 @@
         @endif
     </label>
     <textarea id="{{ $name }}" name="{{ $name }}" rows="{{ $rows }}" @required($required)
-        class="mt-2 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 @error($name) border-red-400 @enderror">{{ old($name, $value) }}</textarea>
+        class="mt-2 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500 @error($name) border-red-400 @enderror">{{ old($name, $value) }}</textarea>
     @if ($hint)
         <p class="mt-1 text-xs text-gray-500">{{ $hint }}</p>
     @endif

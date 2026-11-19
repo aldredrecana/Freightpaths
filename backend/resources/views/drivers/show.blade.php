@@ -25,7 +25,7 @@
                     <a href="{{ route('drivers.index') }}" class="text-gray-600 underline">Back</a>
                     @if (auth()->user()->hasRole('admin'))
                         <a href="{{ route('drivers.edit', $driver) }}"
-                            class="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700">Edit
+                            class="rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white hover:bg-brand-700">Edit
                             driver</a>
                         <x-confirm-delete :action="route('drivers.destroy', $driver)" title="Delete this driver?" :message="'The login and profile of ' .
                             $driver->user->name .

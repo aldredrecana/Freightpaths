@@ -1,6 +1,6 @@
 @props(['title', 'message' => null, 'actionLabel' => null, 'actionHref' => null])
 <div class="px-6 py-14 text-center">
-    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor"
             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 13l2-7h12l2 7v6H4z" />

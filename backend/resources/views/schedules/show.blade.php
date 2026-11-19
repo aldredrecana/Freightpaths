@@ -8,7 +8,7 @@
 
                 @if (!auth()->user()->hasRole('driver'))
                     @unless (in_array($schedule->status, ['delivered', 'cancelled', 'en_route'], true))
-                        <a href="{{ route('schedules.edit', $schedule) }}" class="text-blue-600 underline">Edit</a>
+                        <a href="{{ route('schedules.edit', $schedule) }}" class="text-brand-600 underline">Edit</a>
                     @endunless
 
                     <x-confirm-delete :action="route('schedules.destroy', $schedule)" title="Delete this trip?"
@@ -179,7 +179,7 @@
 
                         const pill = {
                             resting: 'bg-amber-100 text-amber-800',
-                            tracking: 'bg-blue-50 text-blue-700',
+                            tracking: 'bg-brand-50 text-brand-700',
                             offline: 'bg-red-100 text-red-800',
                             finished: 'bg-emerald-50 text-emerald-700',
                             waiting: 'bg-gray-100 text-gray-600',
@@ -296,8 +296,8 @@
                     @forelse ($schedule->statusLogs as $log)
                         <li class="mb-6 ml-6">
                             <span
-                                class="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full {{ $loop->first ? 'bg-indigo-600' : 'bg-gray-400' }}"></span>
-                            <p class="font-semibold text-sm {{ $loop->first ? 'text-indigo-700' : 'text-gray-800' }}">
+                                class="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full {{ $loop->first ? 'bg-brand-600' : 'bg-gray-400' }}"></span>
+                            <p class="font-semibold text-sm {{ $loop->first ? 'text-brand-700' : 'text-gray-800' }}">
                                 {{ ucfirst(str_replace('_', ' ', $log->status)) }}
                                 @if ($log->is_late)
                                     <span

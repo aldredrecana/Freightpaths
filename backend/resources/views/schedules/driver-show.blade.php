@@ -14,8 +14,8 @@
         ];
 
         $actions = [
-            'accepted' => ['Accept trip', 'Accept this trip?', 'Yes, accept', 'bg-blue-700 hover:bg-blue-800'],
-            'en_route' => ['Start trip', 'Start this trip now?', 'Yes, start trip', 'bg-blue-700 hover:bg-blue-800'],
+            'accepted' => ['Accept trip', 'Accept this trip?', 'Yes, accept', 'bg-brand-700 hover:bg-brand-800'],
+            'en_route' => ['Start trip', 'Start this trip now?', 'Yes, start trip', 'bg-brand-700 hover:bg-brand-800'],
             'delivered' => [
                 'Delivered',
                 'Did you deliver everything?',
@@ -32,7 +32,7 @@
         <div class="mx-auto max-w-2xl space-y-5 px-4">
 
             <a href="{{ route('schedules.mine') }}"
-                class="inline-block text-lg font-semibold text-blue-700 underline">&larr; My trips</a>
+                class="inline-block text-lg font-semibold text-brand-700 underline">&larr; My trips</a>
 
             @if (session('status'))
                 <div class="rounded-2xl bg-emerald-100 p-5 text-xl font-semibold text-emerald-900">
@@ -56,7 +56,7 @@
                             @endphp
                             <li>
                                 <span
-                                    class="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold {{ $done ? 'bg-emerald-600 text-white' : ($current ? 'bg-blue-700 text-white ring-4 ring-blue-200' : 'bg-gray-200 text-gray-600') }}">
+                                    class="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold {{ $done ? 'bg-emerald-600 text-white' : ($current ? 'bg-brand-700 text-white ring-4 ring-brand-200' : 'bg-gray-200 text-gray-600') }}">
                                     {{ $done ? '✓' : $i + 1 }}
                                 </span>
                                 <span
@@ -101,7 +101,7 @@
                     <p class="text-xl font-semibold text-gray-900">{{ $schedule->destination_address }}</p>
                     <a href="https://www.google.com/maps/search/?api=1&amp;query={{ urlencode($schedule->destination_address) }}"
                         target="_blank" rel="noopener"
-                        class="mt-2 inline-block text-lg font-semibold text-blue-700 underline">Open in Maps</a>
+                        class="mt-2 inline-block text-lg font-semibold text-brand-700 underline">Open in Maps</a>
                 </div>
                 <div>
                     <p class="text-base font-semibold text-gray-600">Leave</p>
@@ -116,7 +116,7 @@
 
             @if ($dispatcherPhone)
                 <a href="tel:{{ preg_replace('/[^0-9+]/', '', $dispatcherPhone) }}"
-                    class="flex w-full items-center justify-center rounded-2xl border-2 border-blue-700 py-5 text-xl font-bold text-blue-800">Call
+                    class="flex w-full items-center justify-center rounded-2xl border-2 border-brand-700 py-5 text-xl font-bold text-brand-800">Call
                     dispatcher</a>
             @endif
 

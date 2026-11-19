@@ -3,7 +3,7 @@
     <label for="{{ $name }}" class="block text-sm font-medium text-gray-700">{{ $label }}<span
             class="text-red-500"> *</span></label>
     <select id="{{ $name }}" name="{{ $name }}" required
-        class="mt-2 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500 @error($name) border-red-400 @enderror">
+        class="mt-2 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:ring-brand-500 @error($name) border-red-400 @enderror">
         @if ($placeholder)
             <option value="">{{ $placeholder }}</option>
         @endif

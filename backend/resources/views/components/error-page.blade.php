@@ -16,7 +16,7 @@
             <h1 class="mt-3 text-3xl font-bold text-[#12263F]">{{ $title }}</h1>
             <p class="mt-4 text-lg text-gray-700">{{ $message }}</p>
             <a href="{{ url('/') }}"
-                class="mt-8 block rounded-2xl bg-blue-700 py-4 text-xl font-bold text-white">Go to the home page</a>
+                class="mt-8 block rounded-2xl bg-brand-700 py-4 text-xl font-bold text-white">Go to the home page</a>
         </div>
     </div>
 </body>

@@ -2,19 +2,15 @@
     <div class="py-10">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-            <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Workspace <span class="mx-2">/</span> <span class="text-gray-500">Map</span>
-            </p>
-            <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
-                <div>
-                    <h1 class="text-4xl font-bold tracking-tight text-[#12263F]">Live fleet tracking</h1>
-                    <p class="mt-2 text-gray-500">See every driver on the road, or follow one trip at a time.</p>
-                </div>
-                <button id="map-refresh" type="button"
-                    class="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-                    Refresh location
-                </button>
-            </div>
+            <x-page-header crumb="GPS Tracking" eyebrow="Fleet visibility" title="Live fleet tracking"
+                subtitle="See every driver on the road, or follow one trip at a time.">
+                <x-slot name="actions">
+                    <button id="map-refresh" type="button"
+                        class="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                        Refresh location
+                    </button>
+                </x-slot>
+            </x-page-header>
 
             <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
 
@@ -32,17 +28,17 @@
                 </x-card>
 
                 <x-card class="overflow-hidden lg:col-span-8">
-                    <div style="position: relative;">
-                        <div style="position: absolute; top: 12px; left: 12px; z-index: 1000;"
-                            class="rounded-lg bg-white px-3 py-1.5 text-xs text-gray-600 shadow">
-                            <span style="color: #10b981;">&#9679;</span> Live GPS &middot; updates every 15 seconds
-                        </div>
-                        <div id="map-canvas" style="height: 34rem; z-index: 0;"></div>
+                    <div style="position: relative; z-index: 0;"></div>
+                    <div style="position: absolute; top: 12px; left: 12px; z-index: 1000;"
+                        class="rounded-lg bg-white px-3 py-1.5 text-xs text-gray-600 shadow">
+                        <span style="color: #10b981;">&#9679;</span> Live GPS &middot; updates every 15 seconds
                     </div>
-                    <div id="map-info" class="border-t border-gray-100 p-5 text-sm text-gray-600"></div>
-                </x-card>
+                    <div id="map-canvas" style="height: 34rem; z-index: 0;"></div>
             </div>
+            <div id="map-info" class="border-t border-gray-100 p-5 text-sm text-gray-600"></div>
+            </x-card>
         </div>
+    </div>
     </div>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
@@ -61,7 +57,7 @@
             };
             const pill = {
                 resting: 'bg-amber-100 text-amber-800',
-                tracking: 'bg-blue-50 text-blue-700',
+                tracking: 'bg-brand-50 text-brand-700',
                 offline: 'bg-red-100 text-red-800',
                 waiting: 'bg-gray-100 text-gray-600',
             };
@@ -174,7 +170,7 @@
 
                 trips.forEach(function(t) {
                     const row = el('button', 'block w-full px-6 py-4 text-left hover:bg-gray-50' + (t.id ===
-                        selectedId ? ' bg-blue-50' : ''));
+                        selectedId ? ' bg-brand-50' : ''));
                     row.type = 'button';
 
                     const top = el('div', 'flex items-center gap-3');

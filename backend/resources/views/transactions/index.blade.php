@@ -21,10 +21,10 @@
                         <form method="GET" action="{{ route('transactions.index') }}" class="mt-4 space-y-3">
                             <input type="text" name="q" value="{{ $q }}"
                                 placeholder="Search trips, drivers, places..."
-                                class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500">
+                                class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500">
                             <div class="flex items-center gap-3">
                                 <select name="status" onchange="this.form.submit()"
-                                    class="flex-1 rounded-lg border border-gray-200 py-2.5 pl-3 pr-8 text-sm text-gray-700 focus:border-blue-500 focus:ring-blue-500">
+                                    class="flex-1 rounded-lg border border-gray-200 py-2.5 pl-3 pr-8 text-sm text-gray-700 focus:border-brand-500 focus:ring-brand-500">
                                     <option value="">All finished</option>
                                     <option value="delivered" @selected($status === 'delivered')>Delivered</option>
                                     <option value="cancelled" @selected($status === 'cancelled')>Cancelled</option>
@@ -41,7 +41,7 @@
                         @forelse ($trips as $trip)
                             @php $active = $selected && $selected->id === $trip->id; @endphp
                             <a href="{{ route('transactions.index', array_merge(request()->query(), ['trip' => $trip->id])) }}"
-                                class="block border-l-4 px-6 py-5 {{ $active ? 'border-blue-600 bg-blue-50/60' : 'border-transparent hover:bg-gray-50/60' }}">
+                                class="block border-l-4 px-6 py-5 {{ $active ? 'border-brand-600 bg-brand-50/60' : 'border-transparent hover:bg-gray-50/60' }}">
                                 <div class="flex items-center justify-between gap-3">
                                     <span class="font-semibold text-[#12263F]">{{ $trip->reference }}</span>
                                     <x-status-pill :status="$trip->status" />
@@ -138,13 +138,13 @@
                                         ? 'bg-red-500 text-white border-red-500'
                                         : ($done
                                             ? 'bg-emerald-500 text-white border-emerald-500'
-                                            : 'bg-blue-50 text-blue-600 border-blue-200');
+                                            : 'bg-brand-50 text-brand-600 border-brand-200');
                                     $remark =
                                         $log->remarks && $log->remarks !== 'Schedule created.' ? $log->remarks : null;
                                 @endphp
                                 <li class="relative pl-20 {{ $isLast ? '' : 'pb-10' }}">
                                     @unless ($isLast)
-                                        <span class="absolute left-6 top-12 bottom-0 w-px bg-blue-200"></span>
+                                        <span class="absolute left-6 top-12 bottom-0 w-px bg-brand-200"></span>
                                     @endunless
                                     <span
                                         class="absolute left-0 top-0 flex h-12 w-12 items-center justify-center rounded-full border {{ $circle }}">

@@ -7,8 +7,8 @@
                 @php
                     $label = [
                         'pending' => ['Waiting for you to accept', 'bg-amber-100 text-amber-900'],
-                        'accepted' => ['Accepted', 'bg-blue-100 text-blue-900'],
-                        'en_route' => ['On the way', 'bg-blue-100 text-blue-900'],
+                        'accepted' => ['Accepted', 'bg-brand-100 text-brand-900'],
+                        'en_route' => ['On the way', 'bg-brand-100 text-brand-900'],
                         'delivered' => ['Delivered', 'bg-emerald-100 text-emerald-900'],
                         'needs_reassignment' => ['You declined', 'bg-gray-200 text-gray-800'],
                         'cancelled' => ['Cancelled', 'bg-red-100 text-red-900'],
