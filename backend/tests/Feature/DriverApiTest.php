@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
+use App\Models\LocationPing;
 
 /** The driver API used by the phone app: login, trips, status changes and decline. */
 class DriverApiTest extends TestCase
@@ -138,5 +139,30 @@ class DriverApiTest extends TestCase
         $this->postJson("/api/trips/{$trip->id}/decline", ['reason' => 'sick'])->assertForbidden();
 
         $this->assertSame('pending', $trip->fresh()->status);
+    }
+
+        public function test_a_driver_can_get_the_route_driven_so_far(): void
+    {
+        $driver = $this->makeDriver();
+        $trip = $this->makeTrip($driver, $this->makeTruck(), ['status' => 'en_route']);
+
+        foreach ([3, 2, 1] as $minutesAgo) {
+            LocationPing::create([
+                'schedule_id' => $trip->id,
+                'driver_id' => $driver->id,
+                'latitude' => 14.10 + $minutesAgo * 0.001,
+                'longitude' => 121.24,
+                'accuracy' => 10,
+                'recorded_at' => now()->subMinutes($minutesAgo),
+            ]);
+        }
+
+        Sanctum::actingAs($driver->user);
+        $this->getJson("/api/trips/{$trip->id}/track")
+            ->assertOk()
+            ->assertJsonCount(3, 'path');
+
+        Sanctum::actingAs($this->makeDriver()->user);
+        $this->getJson("/api/trips/{$trip->id}/track")->assertForbidden();
     }
 }

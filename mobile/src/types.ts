@@ -24,6 +24,7 @@ export type Trip = {
     logged_at: string;
     by: string | null;
   }[];
+  rests?: { started_at: string; ended_at: string; minutes: number }[];
 };
 
 // Words the driver sees for each status.
@@ -37,12 +38,12 @@ export const STATUS_LABEL: Record<string, string> = {
 };
 
 export const STATUS_COLOR: Record<string, { bg: string; fg: string }> = {
-  pending: { bg: "#fef3c7", fg: "#92400e" },
-  accepted: { bg: "#dbeafe", fg: "#1e40af" },
-  en_route: { bg: "#e0e7ff", fg: "#3730a3" },
-  delivered: { bg: "#dcfce7", fg: "#166534" },
-  cancelled: { bg: "#e2e8f0", fg: "#475569" },
-  needs_reassignment: { bg: "#fee2e2", fg: "#991b1b" },
+  pending: { bg: "#FEF3C7", fg: "#92400E" },
+  accepted: { bg: "#E3F3ED", fg: "#0B7A5E" },
+  en_route: { bg: "#D1FAE5", fg: "#065F46" },
+  delivered: { bg: "#E5E7EB", fg: "#374151" },
+  cancelled: { bg: "#E5E7EB", fg: "#374151" },
+  needs_reassignment: { bg: "#FEE2E2", fg: "#991B1B" },
 };
 
 // The big button for each next step.
@@ -69,4 +70,32 @@ export function formatDate(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+export function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-PH", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+// "Tue, 18 Nov"
+export function formatDay(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-PH", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
+// "Today's", "Tomorrow's" or "Upcoming" (for "Today's delivery").
+export function dayWord(iso: string): string {
+  const day = new Date(iso);
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  if (day.toDateString() === today.toDateString()) return "Today's";
+  if (day.toDateString() === tomorrow.toDateString()) return "Tomorrow's";
+  return "Upcoming";
 }

@@ -16,8 +16,8 @@ export function StatusBadge({ status }: { status: string }) {
 const styles = StyleSheet.create({
   badge: {
     alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderRadius: 999,
   },
   text: { fontSize: 14, fontWeight: "700" },

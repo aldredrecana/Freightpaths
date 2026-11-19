@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -10,17 +11,27 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../../api";
 import { StatusBadge } from "../../components/StatusBadge";
+import {
+  Banner,
+  Button,
+  Card,
+  InfoTile,
+  RouteTimeline,
+} from "../../components/ui";
+import { colors, shadow } from "../../theme";
 import { startTracking, stopTracking } from "../../tracking";
-import { useTrackingInfo } from "../../useTrackingInfo";
 import {
   ACTION_LABEL,
   formatDate,
+  formatTime,
   TIMELINE_LABEL,
   type Trip,
 } from "../../types";
 import { useApi } from "../../useApi";
+import { useTrackingInfo } from "../../useTrackingInfo";
 
 // Same reasons as the website.
 const DECLINE_REASONS = [
@@ -30,15 +41,21 @@ const DECLINE_REASONS = [
   { value: "other", label: "Other" },
 ];
 
+const ACTION_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
+  accepted: "checkmark-circle",
+  en_route: "navigate",
+  delivered: "flag",
+};
+
 export default function TripDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const call = useApi();
   const tracking = useTrackingInfo();
+  const insets = useSafeAreaInsets();
   const [trip, setTrip] = useState<Trip | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
   const [declining, setDeclining] = useState(false);
   const [reason, setReason] = useState<string | null>(null);
   const [details, setDetails] = useState("");
@@ -141,12 +158,18 @@ export default function TripDetail() {
     }
   }
 
+  const header = {
+    headerStyle: { backgroundColor: colors.bg },
+    headerShadowVisible: false,
+    headerTintColor: colors.text,
+  };
+
   if (!trip) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: "Trip" }} />
+        <Stack.Screen options={{ title: "Trip", ...header }} />
         {error ? (
-          <Text style={styles.errorText}>{error}</Text>
+          <Banner kind="error" text={error} />
         ) : (
           <ActivityIndicator size="large" />
         )}
@@ -155,91 +178,94 @@ export default function TripDetail() {
   }
 
   const next = trip.allowed_next[0];
+  const hasBar = Boolean(next) || trip.can_decline;
+  const sharing = tracking.activeId === trip.id;
 
   return (
-    <ScrollView contentContainerStyle={styles.content} style={styles.screen}>
-      <Stack.Screen options={{ title: trip.reference }} />
+    <View style={styles.screen}>
+      <Stack.Screen options={{ title: trip.reference, ...header }} />
 
-      <StatusBadge status={trip.status} />
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: hasBar ? 200 + insets.bottom : insets.bottom + 40 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <StatusBadge status={trip.status} />
 
-      {message && (
-        <View style={styles.okBox}>
-          <Text style={styles.okText}>{message}</Text>
+        {message && <Banner kind="ok" text={message} />}
+        {error && <Banner kind="error" text={error} />}
+
+        <Card>
+          <RouteTimeline
+            origin={trip.origin_address}
+            destination={trip.destination_address}
+          />
+        </Card>
+
+        <View style={styles.tiles}>
+          <InfoTile
+            icon="time-outline"
+            label="Departure"
+            value={formatDate(trip.departure_at)}
+          />
+          <InfoTile
+            icon="flag-outline"
+            label="Arrival"
+            value={formatDate(trip.expected_arrival_at)}
+          />
+          {trip.truck && (
+            <InfoTile
+              icon="car-sport-outline"
+              label="Truck"
+              value={trip.truck.plate_no}
+            />
+          )}
         </View>
-      )}
-      {error && (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
 
-      <View style={styles.card}>
-        <Text style={styles.label}>From</Text>
-        <Text style={styles.value}>{trip.origin_address}</Text>
-        <Text style={styles.label}>To</Text>
-        <Text style={styles.value}>{trip.destination_address}</Text>
-        <Text style={styles.label}>Departure</Text>
-        <Text style={styles.value}>{formatDate(trip.departure_at)}</Text>
-        <Text style={styles.label}>Expected arrival</Text>
-        <Text style={styles.value}>{formatDate(trip.expected_arrival_at)}</Text>
-        {trip.truck && (
-          <>
-            <Text style={styles.label}>Truck</Text>
-            <Text style={styles.value}>
-              {trip.truck.plate_no} · {trip.truck.model}
-            </Text>
-          </>
-        )}
-      </View>
-
-      {trip.status === "en_route" && (
-        <View style={styles.card}>
-          {tracking.activeId === trip.id ? (
-            <>
-              <Text style={styles.heading}>Sharing your location</Text>
-              <Text style={styles.logWhen}>
-                {tracking.lastSent
-                  ? `Last sent ${tracking.lastSent.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })}`
-                  : "Waiting for the first GPS point..."}
-                {tracking.queued > 0
-                  ? ` · ${tracking.queued} waiting to send`
-                  : ""}
-              </Text>
-            </>
-          ) : (
-            <>
-              <Text style={styles.heading}>Location sharing is off</Text>
-              <Pressable
-                style={styles.secondary}
+        {trip.status === "en_route" && (
+          <Card style={{ gap: 12 }}>
+            <View style={styles.trackRow}>
+              <View
+                style={[
+                  styles.liveDot,
+                  { backgroundColor: sharing ? colors.green : colors.muted },
+                ]}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heading}>
+                  {sharing
+                    ? "Sharing your location"
+                    : "Location sharing is off"}
+                </Text>
+                {sharing && (
+                  <Text style={styles.sub}>
+                    {tracking.lastSent
+                      ? `Last sent ${tracking.lastSent.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })}`
+                      : "Waiting for the first GPS point..."}
+                    {tracking.queued > 0
+                      ? ` · ${tracking.queued} waiting to send`
+                      : ""}
+                  </Text>
+                )}
+              </View>
+            </View>
+            {!sharing && (
+              <Button
+                label="Turn on"
+                tone="light"
                 onPress={async () => {
                   const started = await startTracking(trip.id);
                   if (!started.ok) setError(started.message ?? null);
                 }}
-              >
-                <Text style={styles.secondaryText}>Turn on</Text>
-              </Pressable>
-            </>
-          )}
-        </View>
-      )}
+              />
+            )}
+          </Card>
+        )}
 
-      {next && (
-        <Pressable
-          style={[styles.action, busy && styles.disabled]}
-          disabled={busy}
-          onPress={() => onAction(next)}
-        >
-          {busy ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.actionText}>{ACTION_LABEL[next] ?? next}</Text>
-          )}
-        </Pressable>
-      )}
-
-      {trip.can_decline &&
-        (declining ? (
-          <View style={styles.card}>
+        {declining && (
+          <Card style={{ gap: 10 }}>
             <Text style={styles.heading}>Why are you declining?</Text>
             {DECLINE_REASONS.map((r) => (
               <Pressable
@@ -247,14 +273,14 @@ export default function TripDetail() {
                 style={[styles.reason, reason === r.value && styles.reasonOn]}
                 onPress={() => setReason(r.value)}
               >
-                <Text
-                  style={[
-                    styles.reasonText,
-                    reason === r.value && styles.reasonTextOn,
-                  ]}
-                >
-                  {r.label}
-                </Text>
+                <Ionicons
+                  name={
+                    reason === r.value ? "radio-button-on" : "radio-button-off"
+                  }
+                  size={22}
+                  color={reason === r.value ? colors.red : colors.muted}
+                />
+                <Text style={styles.reasonText}>{r.label}</Text>
               </Pressable>
             ))}
             <TextInput
@@ -262,143 +288,163 @@ export default function TripDetail() {
               placeholder={
                 reason === "other" ? "Details (required)" : "Details (optional)"
               }
+              placeholderTextColor={colors.muted}
               multiline
               maxLength={300}
               value={details}
               onChangeText={setDetails}
             />
-            <Pressable
-              style={[styles.danger, busy && styles.disabled]}
-              disabled={busy}
-              onPress={confirmDecline}
-            >
-              {busy ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.dangerText}>Send decline</Text>
-              )}
-            </Pressable>
-            <Pressable
-              style={styles.secondary}
-              onPress={() => setDeclining(false)}
-            >
-              <Text style={styles.secondaryText}>Cancel</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable
-            style={styles.declineLink}
-            onPress={() => {
-              setDeclining(true);
-              setError(null);
-              setMessage(null);
-            }}
-          >
-            <Text style={styles.declineLinkText}>Decline this trip</Text>
-          </Pressable>
-        ))}
+          </Card>
+        )}
 
-      <View style={styles.card}>
-        <Text style={styles.heading}>Timeline</Text>
-        {(trip.history ?? []).map((log, i) => (
-          <View key={i} style={styles.logRow}>
-            <Text style={styles.logTitle}>
-              {TIMELINE_LABEL[log.status] ?? log.status}
-            </Text>
-            <Text style={styles.logWhen}>{formatDate(log.logged_at)}</Text>
-            {log.remarks ? (
-              <Text style={styles.logNote}>{log.remarks}</Text>
-            ) : null}
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+        {trip.rests && trip.rests.length > 0 && (
+          <Card style={{ gap: 8 }}>
+            <Text style={styles.heading}>Rest breaks counted</Text>
+            {trip.rests.map((r, i) => (
+              <View key={i} style={styles.restRow}>
+                <Ionicons name="cafe-outline" size={20} color={colors.amber} />
+                <Text style={styles.restText}>
+                  {formatTime(r.started_at)} – {formatTime(r.ended_at)} ·{" "}
+                  {r.minutes} min
+                </Text>
+              </View>
+            ))}
+          </Card>
+        )}
+
+        <Card>
+          <Text style={styles.heading}>Timeline</Text>
+          {(trip.history ?? []).map((log, i, all) => (
+            <View key={i} style={styles.logRow}>
+              <View style={styles.logRail}>
+                <View style={[styles.logDot, i === 0 && styles.logDotLatest]} />
+                {i < all.length - 1 && <View style={styles.logLine} />}
+              </View>
+              <View style={{ flex: 1, paddingBottom: 16 }}>
+                <Text style={styles.logTitle}>
+                  {TIMELINE_LABEL[log.status] ?? log.status}
+                </Text>
+                <Text style={styles.sub}>{formatDate(log.logged_at)}</Text>
+                {log.remarks ? (
+                  <Text style={styles.logNote}>{log.remarks}</Text>
+                ) : null}
+              </View>
+            </View>
+          ))}
+        </Card>
+      </ScrollView>
+
+      {hasBar && (
+        <View style={[styles.bar, { paddingBottom: insets.bottom + 14 }]}>
+          {declining ? (
+            <>
+              <Button
+                label="Send decline"
+                tone="danger"
+                busy={busy}
+                onPress={confirmDecline}
+              />
+              <Pressable
+                style={styles.linkWrap}
+                onPress={() => setDeclining(false)}
+              >
+                <Text style={styles.link}>Cancel</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              {next && (
+                <Button
+                  label={ACTION_LABEL[next] ?? next}
+                  icon={ACTION_ICON[next]}
+                  busy={busy}
+                  onPress={() => onAction(next)}
+                />
+              )}
+              {trip.can_decline && (
+                <Pressable
+                  style={styles.linkWrap}
+                  onPress={() => {
+                    setDeclining(true);
+                    setError(null);
+                    setMessage(null);
+                  }}
+                >
+                  <Text style={[styles.link, { color: colors.red }]}>
+                    Decline this trip
+                  </Text>
+                </Pressable>
+              )}
+            </>
+          )}
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#f1f5f9" },
-  content: { padding: 16, gap: 14 },
+  screen: { flex: 1, backgroundColor: colors.bg },
   center: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
     padding: 24,
+    backgroundColor: colors.bg,
   },
-  card: { backgroundColor: "#fff", borderRadius: 14, padding: 18 },
-  label: { fontSize: 14, color: "#64748b", marginTop: 10 },
-  value: { fontSize: 19, color: "#0f172a", fontWeight: "600" },
-  heading: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#0f172a",
-    marginBottom: 4,
-  },
-  action: {
-    height: 66,
-    borderRadius: 14,
-    backgroundColor: "#1d4ed8",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  disabled: { opacity: 0.6 },
-  actionText: { color: "#fff", fontSize: 22, fontWeight: "800" },
-  secondary: {
-    marginTop: 10,
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: "#e2e8f0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  secondaryText: { fontSize: 18, fontWeight: "700", color: "#334155" },
-  okBox: { padding: 14, borderRadius: 10, backgroundColor: "#dcfce7" },
-  okText: { color: "#166534", fontSize: 17, fontWeight: "600" },
-  errorBox: { padding: 14, borderRadius: 10, backgroundColor: "#fee2e2" },
-  errorText: { color: "#991b1b", fontSize: 17 },
-  logRow: { marginTop: 12 },
-  logTitle: { fontSize: 17, fontWeight: "700", color: "#0f172a" },
-  logWhen: { fontSize: 14, color: "#64748b" },
-  logNote: { fontSize: 15, color: "#334155", marginTop: 2 },
-
+  content: { padding: 18, gap: 14 },
+  tiles: { flexDirection: "row", gap: 10 },
+  heading: { fontSize: 18, fontWeight: "800", color: colors.text },
+  sub: { fontSize: 14, color: colors.muted, marginTop: 2 },
+  trackRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  liveDot: { width: 14, height: 14, borderRadius: 7 },
   reason: {
-    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     height: 54,
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "#cbd5e1",
-    justifyContent: "center",
-    paddingHorizontal: 16,
+    borderColor: colors.line,
   },
-  reasonOn: { borderColor: "#b91c1c", backgroundColor: "#fee2e2" },
-  reasonText: { fontSize: 18, color: "#334155" },
-  reasonTextOn: { color: "#991b1b", fontWeight: "700" },
+  reasonOn: { borderColor: colors.red, backgroundColor: colors.redSoft },
+  reasonText: { fontSize: 17, fontWeight: "600", color: colors.text },
   input: {
-    marginTop: 12,
     minHeight: 90,
-    borderWidth: 1.5,
-    borderColor: "#cbd5e1",
-    borderRadius: 12,
     padding: 14,
+    borderRadius: 14,
+    backgroundColor: colors.bg,
     fontSize: 17,
+    color: colors.text,
     textAlignVertical: "top",
   },
-  danger: {
-    marginTop: 12,
-    height: 60,
-    borderRadius: 14,
-    backgroundColor: "#b91c1c",
-    alignItems: "center",
-    justifyContent: "center",
+  restRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  restText: { fontSize: 16, color: colors.text, fontWeight: "600" },
+  logRow: { flexDirection: "row", gap: 12, marginTop: 14 },
+  logRail: { alignItems: "center", width: 16 },
+  logDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.line,
+    marginTop: 4,
   },
-  dangerText: { color: "#fff", fontSize: 20, fontWeight: "800" },
-  declineLink: {
-    height: 56,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: "#b91c1c",
-    alignItems: "center",
-    justifyContent: "center",
+  logDotLatest: { backgroundColor: colors.primary },
+  logLine: { flex: 1, width: 2, backgroundColor: colors.line, marginTop: 4 },
+  logTitle: { fontSize: 17, fontWeight: "700", color: colors.text },
+  logNote: { fontSize: 15, color: colors.text, marginTop: 4 },
+  bar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    gap: 4,
+    padding: 18,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    ...shadow,
   },
-  declineLinkText: { color: "#b91c1c", fontSize: 18, fontWeight: "700" },
+  linkWrap: { alignItems: "center", paddingVertical: 12 },
+  link: { fontSize: 17, fontWeight: "700", color: colors.muted },
 });

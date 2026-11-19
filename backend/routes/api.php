@@ -15,10 +15,14 @@ Route::middleware(['auth:sanctum', 'role:driver'])->group(function () {
 
     Route::get('/trips', [TripController::class, 'index']);
     Route::get('/trips/{schedule}', [TripController::class, 'show']);
+    Route::get('/trips/{schedule}/track', [TripController::class, 'track']);
 
     // Same methods the website uses, so the rules stay in one place.
     Route::post('/trips/{schedule}/status', [ScheduleController::class, 'updateStatus']);
     Route::post('/trips/{schedule}/decline', [ScheduleController::class, 'decline']);
+    
 
     Route::post('/locations', [LocationController::class, 'store'])->middleware('throttle:120,1');
+
+
 });

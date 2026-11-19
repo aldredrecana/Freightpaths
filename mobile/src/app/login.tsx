@@ -1,21 +1,28 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../api";
 import { useAuth } from "../auth";
+import { Banner, Button } from "../components/ui";
 import { getApiUrl, normalizeApiUrl, setApiUrl } from "../server";
+import { colors } from "../theme";
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showServer, setShowServer] = useState(false);
@@ -78,121 +85,131 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.root}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <Text style={styles.title}>FreightPath</Text>
-      <Text style={styles.subtitle}>Driver app</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-        editable={!busy}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        returnKeyType="go"
-        value={password}
-        onChangeText={setPassword}
-        onSubmitEditing={onSubmit}
-        editable={!busy}
-      />
-
-      {error && <Text style={styles.error}>{error}</Text>}
-
-      <Pressable
-        style={[styles.button, busy && styles.buttonDisabled]}
-        onPress={onSubmit}
-        disabled={busy}
+      <ScrollView
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingTop: insets.top + 56, paddingBottom: insets.bottom + 28 },
+        ]}
+        keyboardShouldPersistTaps="handled"
       >
-        {busy ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Log in</Text>
+        <View style={styles.logo}>
+          <Text style={styles.logoText}>F</Text>
+        </View>
+        <Text style={styles.title}>Welcome back</Text>
+        <Text style={styles.subtitle}>Log in to see your trips.</Text>
+
+        <View style={styles.form}>
+          <View style={styles.field}>
+            <Ionicons name="mail-outline" size={20} color={colors.muted} />
+            <TextInput
+              style={styles.fieldInput}
+              placeholder="Email"
+              placeholderTextColor={colors.muted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+              editable={!busy}
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color={colors.muted}
+            />
+            <TextInput
+              style={styles.fieldInput}
+              placeholder="Password"
+              placeholderTextColor={colors.muted}
+              secureTextEntry={!showPassword}
+              returnKeyType="go"
+              value={password}
+              onChangeText={setPassword}
+              onSubmitEditing={onSubmit}
+              editable={!busy}
+            />
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              hitSlop={12}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color={colors.muted}
+              />
+            </Pressable>
+          </View>
+
+          {error && <Banner kind="error" text={error} />}
+
+          <Button label="Log in" onPress={onSubmit} busy={busy} />
+        </View>
+
+        <Pressable onPress={() => setShowServer(!showServer)} hitSlop={10}>
+          <Text style={styles.serverLink}>Server settings</Text>
+        </Pressable>
+
+        {showServer && (
+          <View style={styles.form}>
+            <View style={styles.field}>
+              <Ionicons name="globe-outline" size={20} color={colors.muted} />
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="Server address"
+                placeholderTextColor={colors.muted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                value={serverInput}
+                onChangeText={setServerInput}
+              />
+            </View>
+            <Button label="Save and test" tone="light" onPress={saveServer} />
+            {serverNote && <Text style={styles.serverNote}>{serverNote}</Text>}
+          </View>
         )}
-      </Pressable>
-
-      <Pressable onPress={() => setShowServer(!showServer)}>
-        <Text style={styles.serverLink}>Server settings</Text>
-      </Pressable>
-
-      {showServer && (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Server address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            value={serverInput}
-            onChangeText={setServerInput}
-          />
-          <Pressable style={styles.serverButton} onPress={saveServer}>
-            <Text style={styles.serverButtonText}>Save and test</Text>
-          </Pressable>
-          {serverNote && <Text style={styles.serverNote}>{serverNote}</Text>}
-        </>
-      )}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-    backgroundColor: "#fff",
-  },
-  title: { fontSize: 34, fontWeight: "800", color: "#0f172a" },
-  subtitle: { fontSize: 18, color: "#64748b", marginBottom: 32 },
-  input: {
-    height: 58,
-    borderWidth: 1.5,
-    borderColor: "#cbd5e1",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 18,
-    marginBottom: 14,
-  },
-  error: { color: "#b91c1c", fontSize: 16, marginBottom: 14 },
-  button: {
-    height: 60,
-    borderRadius: 12,
-    backgroundColor: "#1d4ed8",
+  root: { flex: 1, backgroundColor: "#fff" },
+  scroll: { flexGrow: 1, paddingHorizontal: 24 },
+  logo: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: colors.brand,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 6,
   },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: "#fff", fontSize: 20, fontWeight: "700" },
-
+  logoText: { color: "#fff", fontSize: 34, fontWeight: "800" },
+  title: { marginTop: 28, fontSize: 32, fontWeight: "800", color: colors.ink },
+  subtitle: { marginTop: 4, fontSize: 17, color: colors.muted },
+  form: { marginTop: 28, gap: 14 },
+  field: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    height: 60,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: colors.bg,
+  },
+  fieldInput: { flex: 1, fontSize: 18, color: colors.ink },
   serverLink: {
     marginTop: 28,
     textAlign: "center",
-    fontSize: 16,
-    color: "#64748b",
+    fontSize: 15,
+    color: colors.muted,
     textDecorationLine: "underline",
   },
-  serverButton: {
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: "#e2e8f0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  serverButtonText: { fontSize: 18, fontWeight: "700", color: "#334155" },
-  serverNote: {
-    marginTop: 10,
-    fontSize: 15,
-    color: "#475569",
-    textAlign: "center",
-  },
+  serverNote: { fontSize: 15, color: colors.muted, textAlign: "center" },
 });

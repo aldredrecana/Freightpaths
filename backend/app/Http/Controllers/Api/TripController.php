@@ -34,4 +34,17 @@ class TripController extends Controller
 
         return new TripResource($schedule);
     }
+        // The route the driver has driven so far (for the map in the app).
+    public function track(Request $request, Schedule $schedule)
+    {
+        abort_unless($schedule->driver->user_id === $request->user()->id, 403);
+
+        $path = $schedule->locationPings()
+            ->orderBy('recorded_at')
+            ->get(['latitude', 'longitude'])
+            ->map(fn ($p) => [$p->latitude, $p->longitude])
+            ->values();
+
+        return response()->json(['path' => $path]);
+    }
 }
