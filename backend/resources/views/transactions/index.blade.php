@@ -2,9 +2,7 @@
     <div class="py-10">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-            <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Workspace <span class="mx-2">/</span> <span class="text-gray-500">Transactions</span>
-            </p>
+            <p class="text-xs font-bold uppercase tracking-widest text-brand-600">Transactions</p>
             <h1 class="mt-4 text-4xl font-bold tracking-tight text-[#12263F]">Trip history</h1>
             <p class="mt-2 text-gray-500">Every milestone, in one place. Follow the journey from start to finish.</p>
 

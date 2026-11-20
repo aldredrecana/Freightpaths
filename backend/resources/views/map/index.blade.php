@@ -5,6 +5,10 @@
             <x-page-header crumb="GPS Tracking" eyebrow="Fleet visibility" title="Live fleet tracking"
                 subtitle="See every driver on the road, or follow one trip at a time.">
                 <x-slot name="actions">
+                    <span
+                        class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+                        <span class="h-2 w-2 rounded-full bg-brand-500"></span> Live locations
+                    </span>
                     <button id="map-refresh" type="button"
                         class="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
                         Refresh location
@@ -14,31 +18,31 @@
 
             <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
 
+                <x-card class="overflow-hidden lg:col-span-8">
+                    <div style="position: relative; z-index: 0;">
+                        <div style="position: absolute; top: 12px; left: 12px; z-index: 1000;"
+                            class="rounded-lg bg-white px-3 py-1.5 text-xs text-gray-600 shadow">
+                            <span style="color: #10b981;">&#9679;</span> Live GPS &middot; updates every 15 seconds
+                        </div>
+                        <div id="map-canvas" style="height: 34rem; z-index: 0;"></div>
+                    </div>
+                    <div id="map-info" class="border-t border-gray-100 p-5 text-sm text-gray-600"></div>
+                </x-card>
+
                 <x-card class="overflow-hidden lg:col-span-4">
                     <div class="flex items-center justify-between gap-3 p-6 pb-4">
                         <div>
-                            <h2 class="text-lg font-semibold text-[#12263F]">Trips on the road</h2>
+                            <h2 class="text-lg font-semibold text-[#12263F]">Trucks on the road</h2>
                             <p id="map-count" class="mt-1 text-xs text-gray-500">Loading...</p>
                         </div>
                         <button id="map-all" type="button"
-                            class="rounded-lg bg-[#12263F] px-3 py-2 text-xs font-semibold text-white">View all</button>
+                            class="rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white">View all</button>
                     </div>
                     <div id="map-list" class="divide-y divide-gray-100 border-t border-gray-100"
                         style="max-height: 34rem; overflow-y: auto;"></div>
                 </x-card>
-
-                <x-card class="overflow-hidden lg:col-span-8">
-                    <div style="position: relative; z-index: 0;"></div>
-                    <div style="position: absolute; top: 12px; left: 12px; z-index: 1000;"
-                        class="rounded-lg bg-white px-3 py-1.5 text-xs text-gray-600 shadow">
-                        <span style="color: #10b981;">&#9679;</span> Live GPS &middot; updates every 15 seconds
-                    </div>
-                    <div id="map-canvas" style="height: 34rem; z-index: 0;"></div>
             </div>
-            <div id="map-info" class="border-t border-gray-100 p-5 text-sm text-gray-600"></div>
-            </x-card>
         </div>
-    </div>
     </div>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
@@ -50,13 +54,13 @@
             const dataUrl = "{{ route('map.data') }}";
 
             const stateColor = {
-                resting: '#f59e0b',
-                tracking: '#2563eb',
+                resting: '#2563eb',
+                tracking: '#FF8A1F',
                 offline: '#dc2626',
                 waiting: '#6b7280'
             };
             const pill = {
-                resting: 'bg-amber-100 text-amber-800',
+                resting: 'bg-blue-50 text-blue-700',
                 tracking: 'bg-brand-50 text-brand-700',
                 offline: 'bg-red-100 text-red-800',
                 waiting: 'bg-gray-100 text-gray-600',
@@ -175,11 +179,12 @@
 
                     const top = el('div', 'flex items-center gap-3');
                     top.appendChild(el('span',
-                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600',
+                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700',
                         initials(t.driver)));
                     const who = el('div', 'min-w-0');
-                    who.appendChild(el('div', 'truncate font-semibold text-[#12263F]', t.driver));
-                    who.appendChild(el('div', 'text-xs text-gray-500', t.truck + ' \u00b7 ' + t.reference));
+                    who.appendChild(el('div', 'truncate font-semibold text-[#12263F]', t.truck + ' \u00b7 ' + t
+                        .driver));
+                    who.appendChild(el('div', 'text-xs text-gray-500', t.reference));
                     top.appendChild(who);
                     row.appendChild(top);
 
@@ -220,9 +225,9 @@
 
                     if (d.path.length > 1) {
                         L.polyline(d.path, {
-                            color: '#2563eb',
+                            color: '#FF8A1F',
                             weight: 4,
-                            opacity: 0.85
+                            opacity: 0.9
                         }).addTo(layer);
                     }
                     d.path.forEach(function(p) {
@@ -241,8 +246,8 @@
                     d.rests.forEach(function(r, i) {
                         L.circleMarker([r.lat, r.lng], {
                                 radius: 11,
-                                color: '#b45309',
-                                fillColor: '#f59e0b',
+                                color: '#1d4ed8',
+                                fillColor: '#3b82f6',
                                 fillOpacity: 0.85
                             })
                             .bindTooltip('Rest ' + (i + 1) + ': ' + r.minutes + ' min').addTo(layer);
@@ -270,7 +275,7 @@
 
                 const allBtn = document.getElementById('map-all');
                 allBtn.className = 'rounded-lg px-3 py-2 text-xs font-semibold ' +
-                    (selectedId === null ? 'bg-[#12263F] text-white' : 'border border-gray-200 bg-white text-gray-700');
+                    (selectedId === null ? 'bg-brand-500 text-white' : 'border border-gray-200 bg-white text-gray-700');
 
                 if (selectedId === null) {
                     box.appendChild(el('p', '', trips.length ?
@@ -288,7 +293,7 @@
 
                 const left = el('div', 'flex items-center gap-3');
                 left.appendChild(el('span',
-                    'flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600',
+                    'flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700',
                     initials(t.driver)));
                 const who = el('div');
                 who.appendChild(el('div', 'font-semibold text-[#12263F]', t.driver));

@@ -2,9 +2,7 @@
     <div class="py-10">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-            <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Workspace <span class="mx-2">/</span> <span class="text-gray-500">Drivers</span>
-            </p>
+            <p class="text-xs font-bold uppercase tracking-widest text-brand-600">Fleet Directory</p>
 
             <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -31,14 +29,16 @@
                     ['Off duty', $counts->get('off_duty', 0), 'bg-gray-400'],
                 ];
             @endphp
-            <div class="mt-8 flex flex-wrap items-center gap-x-10 gap-y-3">
+            <div class="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
                 @foreach ($stats as [$label, $value, $dot])
-                    <div class="flex items-center gap-2">
-                        @if ($dot)
-                            <span class="h-2 w-2 rounded-full {{ $dot }}"></span>
-                        @endif
-                        <span class="text-3xl font-bold text-[#12263F]">{{ $value }}</span>
-                        <span class="text-sm text-gray-500">{{ $label }}</span>
+                    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            @if ($dot)
+                                <span class="h-2 w-2 rounded-full {{ $dot }}"></span>
+                            @endif
+                            {{ $label }}
+                        </div>
+                        <p class="mt-2 text-3xl font-bold text-[#12263F]">{{ $value }}</p>
                     </div>
                 @endforeach
             </div>
@@ -67,6 +67,8 @@
                         @if ($q !== '' || $status)
                             <a href="{{ route('drivers.index') }}" class="text-sm text-gray-500 underline">Clear</a>
                         @endif
+                        <span class="text-sm text-gray-500">{{ $drivers->total() }}
+                            {{ \Illuminate\Support\Str::plural('driver', $drivers->total()) }}</span>
                         <select name="status" onchange="this.form.submit()"
                             class="rounded-lg border border-gray-200 py-3 pl-4 pr-10 text-sm text-gray-700 focus:border-brand-500 focus:ring-brand-500">
                             <option value="">All statuses</option>
