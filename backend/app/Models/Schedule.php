@@ -18,12 +18,20 @@ class Schedule extends Model
         'expected_arrival_at',
         'status',
         'assigned_at',
+        'origin_lat',
+        'origin_lng',
+        'destination_lat',
+        'destination_lng',
     ];
 
     protected $casts = [
         'departure_at' => 'datetime',
         'expected_arrival_at' => 'datetime',
         'assigned_at' => 'datetime',
+        'origin_lat' => 'float',
+        'origin_lng' => 'float',
+        'destination_lat' => 'float',
+        'destination_lng' => 'float',
     ];
 
     public function driver(): BelongsTo
@@ -88,6 +96,20 @@ class Schedule extends Model
                     : $user->hasRole('driver');
             }),
         );
+    }
+
+        // Pickup and drop-off pins for the map: [lat, lng] or null when not set.
+    public function routePlan(): array
+    {
+        return [
+            'origin' => $this->origin_lat !== null ? [$this->origin_lat, $this->origin_lng] : null,
+            'destination' => $this->destination_lat !== null ? [$this->destination_lat, $this->destination_lng] : null,
+        ];
+    }
+
+    public function hasPins(): bool
+    {
+        return $this->origin_lat !== null || $this->destination_lat !== null;
     }
 
     public function isFinished(): bool

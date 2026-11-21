@@ -15,6 +15,9 @@ class TripResource extends JsonResource
             'status' => $this->status,
             'origin_address' => $this->origin_address,
             'destination_address' => $this->destination_address,
+            // Map pins as [lat, lng], or null when the dispatcher did not set them.
+            'origin_point' => $this->routePlan()['origin'],
+            'destination_point' => $this->routePlan()['destination'],
             'departure_at' => $this->departure_at->toIso8601String(),
             'expected_arrival_at' => $this->expected_arrival_at->toIso8601String(),
             'urgency' => $this->urgency,

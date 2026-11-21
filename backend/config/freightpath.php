@@ -32,4 +32,9 @@ return [
     // a company can paste its own provider's URL and credit line here (see .env).
     'map_tile_url' => env('FREIGHTPATH_MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
     'map_attribution' => env('FREIGHTPATH_MAP_ATTRIBUTION', '&copy; OpenStreetMap contributors'),
+
+    
+    // Address search for the "Find on map" button (free OpenStreetMap Nominatim, light use only).
+    'geocode_url' => env('FREIGHTPATH_GEOCODE_URL', 'https://nominatim.openstreetmap.org/search'),
+    'geocode_country' => env('FREIGHTPATH_GEOCODE_COUNTRY', 'ph'), // search only inside the Philippines
 ];

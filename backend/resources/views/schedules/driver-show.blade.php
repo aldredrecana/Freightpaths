@@ -99,7 +99,7 @@
                 <div>
                     <p class="text-base font-semibold text-gray-600">To</p>
                     <p class="text-xl font-semibold text-gray-900">{{ $schedule->destination_address }}</p>
-                    <a href="https://www.google.com/maps/search/?api=1&amp;query={{ urlencode($schedule->destination_address) }}"
+                    <a href="https://www.google.com/maps/search/?api=1&amp;query={{ $schedule->destination_lat !== null ? $schedule->destination_lat . ',' . $schedule->destination_lng : urlencode($schedule->destination_address) }}"
                         target="_blank" rel="noopener"
                         class="mt-2 inline-block text-lg font-semibold text-brand-700 underline">Open in Maps</a>
                 </div>

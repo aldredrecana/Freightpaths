@@ -452,6 +452,11 @@ class ScheduleController extends Controller
             'destination_address' => ['required', 'string'],
             'departure_at' => ['required', 'date'],
             'expected_arrival_at' => ['required', 'date', 'after:departure_at'],
+            // Optional map pins. A pin needs both its latitude and its longitude.
+            'origin_lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:origin_lng'],
+            'origin_lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:origin_lat'],
+            'destination_lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:destination_lng'],
+            'destination_lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:destination_lat'],
         ]);
 
         $driver = Driver::findOrFail($data['driver_id']);

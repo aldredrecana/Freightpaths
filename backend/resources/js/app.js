@@ -1,11 +1,16 @@
 import Alpine from "alpinejs";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { drawPlannedRoute, routePicker } from "./route-pins";
 
 window.Alpine = Alpine;
 
 // The map library, bundled with our own files (no outside CDN needed).
 window.L = L;
+
+// Trip pins: the picker in the trip form, and the planned route on trip maps.
+Alpine.data("routePicker", routePicker);
+window.drawPlannedRoute = drawPlannedRoute;
 
 Alpine.start();
 

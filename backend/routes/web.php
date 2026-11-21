@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GeocodeController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\AlertController;
+
 
 
 Route::get(
@@ -122,6 +124,11 @@ Route::middleware(["auth", "role:admin,dispatcher"])
 Route::middleware(["auth", "role:admin,dispatcher"])->group(function () {
     // Alerts for the bell in the top bar (declined trips, no signal, not accepted yet).
     Route::get("/alerts", AlertController::class)->name("alerts.index");
+    
+    // Address to map point, for the "Find on map" button in the trip form.
+    Route::get("/geocode", GeocodeController::class)
+        ->middleware("throttle:30,1")
+        ->name("geocode");
 
     Route::get("/map", [MapController::class, "index"])->name("map.index");
     Route::get("/map/data", [MapController::class, "data"])->name("map.data");

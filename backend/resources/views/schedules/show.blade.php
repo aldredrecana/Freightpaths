@@ -156,6 +156,32 @@
                 </form>
             @endif
 
+            @if (!in_array($schedule->status, ['en_route', 'delivered'], true) && $schedule->hasPins())
+                <div id="route-card" class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <h3 class="font-semibold text-gray-800">Planned route</h3>
+                    <p class="mb-3 mt-1 text-sm text-gray-600">A = pickup, B = drop-off. GPS tracking starts when the
+                        driver starts the trip.</p>
+                    <div id="route-map" style="height: 18rem; z-index: 0;"
+                        class="w-full rounded-lg border border-gray-200"></div>
+                </div>
+
+                <script type="module">
+                    (function() {
+                        const map = L.map('route-map');
+                        L.tileLayer(@json(config('freightpath.map_tile_url')), {
+                            maxZoom: 19,
+                            attribution: @json(config('freightpath.map_attribution')),
+                        }).addTo(map);
+
+                        const points = window.drawPlannedRoute(L.layerGroup().addTo(map), @json($schedule->routePlan()));
+                        if (points.length === 1) map.setView(points[0], 15);
+                        else map.fitBounds(points, {
+                            padding: [40, 40]
+                        });
+                    })();
+                </script>
+            @endif
+
             @if (in_array($schedule->status, ['en_route', 'delivered'], true))
                 <div id="tracking-card" class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                     data-url="{{ route('schedules.tracking', $schedule) }}"
@@ -193,6 +219,7 @@
                         }).addTo(map);
 
                         const layer = L.layerGroup().addTo(map);
+                        const plan = @json($schedule->routePlan()); // pickup (A) and drop-off (B) pins
                         let fitted = false;
 
                         function render(d) {
@@ -204,6 +231,7 @@
                             document.getElementById('tracking-message').textContent = d.message;
 
                             const bounds = [];
+                            bounds.push(...window.drawPlannedRoute(layer, plan));
 
                             if (d.path.length > 1) {
                                 L.polyline(d.path, {
