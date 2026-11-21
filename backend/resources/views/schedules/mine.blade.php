@@ -1,6 +1,7 @@
 <x-app-layout>
     <div class="pb-28 pt-6">
         <div class="mx-auto max-w-2xl space-y-4 px-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-brand-600">My deliveries</p>
             <h1 class="text-3xl font-bold text-gray-900">My trips</h1>
 
             @forelse ($schedules as $schedule)

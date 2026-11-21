@@ -1,6 +1,7 @@
 <x-app-layout>
     <div class="pb-28 pt-6">
         <div class="mx-auto max-w-2xl space-y-5 px-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-brand-600">Today</p>
 
             <p class="text-3xl font-bold text-gray-900">Hello,
                 {{ \Illuminate\Support\Str::of(auth()->user()->name)->explode(' ')->first() }}</p>

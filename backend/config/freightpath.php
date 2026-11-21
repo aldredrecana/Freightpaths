@@ -26,4 +26,10 @@ return [
     'rest_max_speed_ms' => (float) env('FREIGHTPATH_REST_MAX_SPEED_MS', 2.0),
     'rest_merge_gap_minutes' => (int) env('FREIGHTPATH_REST_MERGE_GAP_MINUTES', 10),
     'rest_merge_distance_m' => (float) env('FREIGHTPATH_REST_MERGE_DISTANCE_M', 200),
+
+    
+    // Map tiles (the map pictures). The free OpenStreetMap server is for light use only;
+    // a company can paste its own provider's URL and credit line here (see .env).
+    'map_tile_url' => env('FREIGHTPATH_MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+    'map_attribution' => env('FREIGHTPATH_MAP_ATTRIBUTION', '&copy; OpenStreetMap contributors'),
 ];

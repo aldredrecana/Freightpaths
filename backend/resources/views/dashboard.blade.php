@@ -235,9 +235,9 @@
             const map = L.map('fleet-map', {
                 scrollWheelZoom: false
             }).setView([14.17, 121.24], 9);
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            L.tileLayer(@json(config('freightpath.map_tile_url')), {
                 maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors',
+                attribution: @json(config('freightpath.map_attribution')),
             }).addTo(map);
             const layer = L.layerGroup().addTo(map);
             let fitted = false;

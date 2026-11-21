@@ -1,37 +1,35 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Delivery {{ $schedule->reference }}</h2>
-            <div class="flex items-center gap-4 text-sm">
-                <a href="{{ auth()->user()->hasRole('driver') ? route('schedules.mine') : (in_array($schedule->status, ['delivered', 'cancelled'], true) ? route('transactions.index', ['trip' => $schedule->id]) : route('schedules.index')) }}"
-                    class="text-gray-600 underline">Back</a>
+    <div class="py-10">
+        <div class="mx-auto max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8">
 
-                @if (!auth()->user()->hasRole('driver'))
-                    @unless (in_array($schedule->status, ['delivered', 'cancelled', 'en_route'], true))
-                        <a href="{{ route('schedules.edit', $schedule) }}" class="text-brand-600 underline">Edit</a>
-                    @endunless
+            <x-page-header crumb="Trip details" :title="'Delivery ' . $schedule->reference" :subtitle="$schedule->origin_address . ' → ' . $schedule->destination_address">
+                <x-slot name="actions">
+                    <x-btn variant="secondary" :href="auth()->user()->hasRole('driver')
+                        ? route('schedules.mine')
+                        : (in_array($schedule->status, ['delivered', 'cancelled'], true)
+                            ? route('transactions.index', ['trip' => $schedule->id])
+                            : route('schedules.index'))">Back</x-btn>
 
-                    @if ($schedule->status === 'pending')
-                        <x-confirm-delete :action="route('schedules.destroy', $schedule)" title="Delete this trip?"
-                            message="Only pending trips can be deleted." />
+                    @if (!auth()->user()->hasRole('driver'))
+                        @unless (in_array($schedule->status, ['delivered', 'cancelled', 'en_route'], true))
+                            <x-btn :href="route('schedules.edit', $schedule)">Edit trip</x-btn>
+                        @endunless
+
+                        @if ($schedule->status === 'pending')
+                            <x-confirm-delete :action="route('schedules.destroy', $schedule)" title="Delete this trip?"
+                                message="Only pending trips can be deleted." />
+                        @endif
                     @endif
-                @endif
-            </div>
-        </div>
-    </x-slot>
-
-    <div class="py-8">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-
-
+                </x-slot>
+            </x-page-header>
 
             @if ($errors->has('delete'))
-                <div class="p-3 bg-red-100 text-red-800 rounded">{{ $errors->first('delete') }}</div>
+                <div class="rounded-lg bg-red-100 p-3 text-sm text-red-800">{{ $errors->first('delete') }}</div>
             @endif
 
             @if ($schedule->urgency)
                 <div
-                    class="p-3 rounded {{ $schedule->urgency === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800' }}">
+                    class="rounded-lg p-3 text-sm {{ $schedule->urgency === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800' }}">
                     <strong class="uppercase">{{ $schedule->urgency }}</strong>: departure
                     {{ $schedule->departure_at->diffForHumans() }}
                     @if ($schedule->awaiting_since)
@@ -40,24 +38,30 @@
                 </div>
             @endif
 
-            <div class="bg-white shadow-sm sm:rounded-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div><span class="text-gray-500">Driver:</span> {{ $schedule->driver->user->name }}</div>
-                <div><span class="text-gray-500">Truck:</span> {{ $schedule->truck->plate_no }} -
-                    {{ $schedule->truck->model }}</div>
-                <div><span class="text-gray-500">Origin:</span> {{ $schedule->origin_address }}</div>
-                <div><span class="text-gray-500">Destination:</span> {{ $schedule->destination_address }}</div>
-                <div><span class="text-gray-500">Departure:</span>
-                    {{ $schedule->departure_at->format('M d, Y g:i A') }}</div>
-                <div><span class="text-gray-500">Expected arrival:</span>
-                    {{ $schedule->expected_arrival_at->format('M d, Y g:i A') }}</div>
-                <div class="md:col-span-2"><span class="text-gray-500">Current status:</span>
-                    <span class="font-semibold">{{ ucfirst(str_replace('_', ' ', $schedule->status)) }}</span>
+            <div
+                class="grid grid-cols-1 gap-5 rounded-2xl border border-gray-200 bg-white p-6 text-sm shadow-sm md:grid-cols-2">
+                @foreach ([
+        'Driver' => $schedule->driver->user->name,
+        'Truck' => $schedule->truck->plate_no . ' · ' . $schedule->truck->model,
+        'Origin' => $schedule->origin_address,
+        'Destination' => $schedule->destination_address,
+        'Departure' => $schedule->departure_at->format('M d, Y g:i A'),
+        'Expected arrival' => $schedule->expected_arrival_at->format('M d, Y g:i A'),
+    ] as $label => $value)
+                    <div>
+                        <div class="text-xs uppercase tracking-wider text-gray-400">{{ $label }}</div>
+                        <div class="mt-1 text-gray-800">{{ $value }}</div>
+                    </div>
+                @endforeach
+                <div class="md:col-span-2">
+                    <div class="text-xs uppercase tracking-wider text-gray-400">Current status</div>
+                    <div class="mt-1"><x-status-pill :status="$schedule->status" /></div>
                 </div>
             </div>
 
             @if (count($nextStatuses))
                 <form method="POST" action="{{ route('schedules.status', $schedule) }}"
-                    class="bg-white shadow-sm sm:rounded-lg p-6">
+                    class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                     @csrf
                     <h3 class="font-semibold text-gray-800 mb-4">Update delivery status</h3>
                     <x-input-label for="remarks" value="Remarks (optional)" />
@@ -67,10 +71,9 @@
 
                     <div class="mt-4 flex gap-3">
                         @foreach ($nextStatuses as $s)
-                            <button type="submit" name="status" value="{{ $s }}"
-                                class="px-4 py-2 rounded-md text-xs uppercase text-white {{ $s === 'cancelled' ? 'bg-red-600' : 'bg-gray-800' }}">
-                                {{ ['accepted' => 'Accept Trip', 'en_route' => 'Depart / En Route', 'delivered' => 'Mark Delivered', 'cancelled' => 'Cancel Trip'][$s] }}
-                            </button>
+                            <x-btn name="status" value="{{ $s }}" :variant="$s === 'cancelled' ? 'danger' : 'primary'">
+                                {{ ['accepted' => 'Accept trip', 'en_route' => 'Start trip', 'delivered' => 'Mark delivered', 'cancelled' => 'Cancel trip'][$s] }}
+                            </x-btn>
                         @endforeach
                     </div>
                 </form>
@@ -78,7 +81,7 @@
 
             @if (auth()->user()->hasRole('driver') && in_array($schedule->status, ['pending', 'accepted'], true))
                 <form method="POST" action="{{ route('schedules.decline', $schedule) }}"
-                    class="bg-white shadow-sm sm:rounded-lg p-6"
+                    class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                     onsubmit="return confirm('Decline this trip? The dispatcher will be asked to assign another driver.')">
                     @csrf
                     <h3 class="font-semibold text-gray-800">Can't take this trip?</h3>
@@ -114,7 +117,7 @@
                 !auth()->user()->hasRole('driver') &&
                     in_array($schedule->status, ['pending', 'accepted', 'needs_reassignment'], true))
                 <form method="POST" action="{{ route('schedules.reassign', $schedule) }}"
-                    class="bg-white shadow-sm sm:rounded-lg p-6">
+                    class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                     @csrf
                     <h3 class="font-semibold text-gray-800">
                         {{ $schedule->status === 'needs_reassignment' ? 'Find a replacement driver' : 'Reassign driver' }}
@@ -148,13 +151,13 @@
                                 <x-text-input id="note" name="note" class="block mt-1 w-full" />
                             </div>
                         </div>
-                        <div class="mt-4"><x-primary-button>Reassign</x-primary-button></div>
+                        <div class="mt-4"><x-btn>Reassign</x-btn></div>
                     @endif
                 </form>
             @endif
 
             @if (in_array($schedule->status, ['en_route', 'delivered'], true))
-                <div id="tracking-card" class="bg-white shadow-sm sm:rounded-lg p-6"
+                <div id="tracking-card" class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                     data-url="{{ route('schedules.tracking', $schedule) }}"
                     data-live="{{ $schedule->status === 'en_route' ? '1' : '0' }}">
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -168,7 +171,6 @@
                     <h4 class="mt-5 mb-2 text-sm font-semibold text-gray-800">Rest periods</h4>
                     <ul id="tracking-rests" class="text-sm text-gray-700"></ul>
                 </div>
-
 
                 <script type="module">
                     (function() {
@@ -185,9 +187,9 @@
                         };
 
                         const map = L.map('tracking-map').setView([12.88, 121.77], 6);
-                        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        L.tileLayer(@json(config('freightpath.map_tile_url')), {
                             maxZoom: 19,
-                            attribution: '&copy; OpenStreetMap contributors',
+                            attribution: @json(config('freightpath.map_attribution')),
                         }).addTo(map);
 
                         const layer = L.layerGroup().addTo(map);
@@ -289,7 +291,7 @@
                 </script>
             @endif
 
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                 <h3 class="font-semibold text-gray-800 mb-4">Delivery timeline</h3>
                 <ol class="relative border-l border-gray-300 ml-3">
                     @forelse ($schedule->statusLogs as $log)
