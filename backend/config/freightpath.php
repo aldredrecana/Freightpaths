@@ -22,4 +22,8 @@ return [
 
     // GPS points less accurate than this (meters) are ignored.
     'rest_max_accuracy_m' => (int) env('FREIGHTPATH_REST_MAX_ACCURACY_M', 100),
+
+    'rest_max_speed_ms' => (float) env('FREIGHTPATH_REST_MAX_SPEED_MS', 2.0),
+    'rest_merge_gap_minutes' => (int) env('FREIGHTPATH_REST_MERGE_GAP_MINUTES', 10),
+    'rest_merge_distance_m' => (float) env('FREIGHTPATH_REST_MERGE_DISTANCE_M', 200),
 ];
