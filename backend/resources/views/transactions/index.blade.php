@@ -3,8 +3,16 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
             <p class="text-xs font-bold uppercase tracking-widest text-brand-600">Transactions</p>
-            <h1 class="mt-4 text-4xl font-bold tracking-tight text-[#12263F]">Trip history</h1>
-            <p class="mt-2 text-gray-500">Every milestone, in one place. Follow the journey from start to finish.</p>
+            <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold tracking-tight text-[#12263F]">Trip history</h1>
+                    <p class="mt-2 text-gray-500">Every milestone, in one place. Follow the journey from start to finish.
+                    </p>
+                </div>
+                <x-btn variant="secondary" :href="route('transactions.export', ['q' => $q, 'status' => $status])">
+                    Export to Excel (CSV)
+                </x-btn>
+            </div>
 
             <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
 

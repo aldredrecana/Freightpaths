@@ -105,6 +105,10 @@ Route::middleware(['auth', 'role:admin,dispatcher'])
     ->name('transactions.index');
 
 Route::middleware(['auth', 'role:admin,dispatcher'])
+    ->get('/transactions/export', [TransactionController::class, 'export'])
+    ->name('transactions.export');
+
+Route::middleware(['auth', 'role:admin,dispatcher'])
     ->get('/trucks/{truck}', [TruckController::class, 'show'])
     ->whereNumber('truck')
     ->name('trucks.show');
