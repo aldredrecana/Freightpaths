@@ -52,6 +52,12 @@
                 'border-red-200 bg-red-50 text-red-800',
             ],
             [
+                $alerts['no_signal'],
+                'trip(s) with no GPS signal',
+                route('map.index'),
+                'border-red-200 bg-red-50 text-red-800',
+            ],
+            [
                 $alerts['urgent'],
                 'trip(s) urgent or overdue',
                 route('schedules.index'),
@@ -91,135 +97,134 @@
                     All clear. Nothing needs your attention right now.
                 </div>
             @else
-                <div class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-                    @foreach ($alertItems as [$n, $label, $href, $cls])
-                        <a href="{{ $href }}"
-                            class="block rounded-2xl border p-4 text-sm font-medium hover:shadow-sm {{ $cls }}">
-                            <span class="text-2xl font-bold">{{ $n }}</span> {{ $label }}
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-
-            <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-                @foreach ($stats as [$label, $value, $note, $href, $icon])
+                <div class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"></div>
+                @foreach ($alertItems as [$n, $label, $href, $cls])
                     <a href="{{ $href }}"
-                        class="block rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-                        <div class="flex items-start justify-between">
-                            <p class="text-sm font-medium text-gray-500">{{ $label }}</p>
-                            <span
-                                class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5"
-                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">{!! $icons[$icon] !!}</svg>
-                            </span>
-                        </div>
-                        <p class="mt-4 text-4xl font-bold text-[#12263F]">{{ $value }}</p>
-                        <p class="mt-2 text-xs text-gray-500">{{ $note }}</p>
+                        class="block rounded-2xl border p-4 text-sm font-medium hover:shadow-sm {{ $cls }}">
+                        <span class="text-2xl font-bold">{{ $n }}</span> {{ $label }}
                     </a>
                 @endforeach
-            </div>
-
-            <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <x-card class="lg:col-span-2">
-                    <div class="flex items-start justify-between px-6 pt-6">
-                        <div>
-                            <h2 class="text-lg font-semibold text-[#12263F]">Fleet map preview</h2>
-                            <p id="fleet-note" class="mt-1 text-xs text-gray-500">Live positions from driver phones</p>
-                        </div>
-                        <a href="{{ route('map.index') }}"
-                            class="text-sm font-semibold text-brand-600 hover:underline">View live map &rarr;</a>
-                    </div>
-                    <div class="mt-4 px-6 pb-6">
-                        <div id="fleet-map" style="height: 18rem; z-index: 0;"
-                            class="w-full overflow-hidden rounded-xl border border-gray-200"></div>
-                    </div>
-                </x-card>
-
-                <x-card>
-                    <h2 class="px-6 pt-6 text-lg font-semibold text-[#12263F]">Recent activity</h2>
-                    <p class="px-6 text-xs text-gray-500">Latest trip updates</p>
-                    <div class="mt-3 divide-y divide-gray-100">
-                        @forelse ($activity as $log)
-                            @php [$activityLabel, $chip] = $activityLabels[$log->status] ?? [ucfirst(str_replace('_', ' ', $log->status)), 'bg-gray-100 text-gray-600']; @endphp
-                            <a href="{{ route('schedules.show', $log->schedule) }}"
-                                class="flex items-start gap-3 px-6 py-4 hover:bg-gray-50/60">
-                                <span
-                                    class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $chip }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        @if ($log->status === 'en_route')
-                                            <path d="M3 6h11v10H3z" />
-                                            <path d="M14 10h4l3 3v3h-7z" />
-                                            <circle cx="7" cy="17" r="2" />
-                                            <circle cx="17" cy="17" r="2" />
-                                        @else
-                                            <path d="M5 13l4 4L19 7" />
-                                        @endif
-                                    </svg>
-                                </span>
-                                <div class="min-w-0">
-                                    <p class="text-sm font-semibold text-[#12263F]">{{ $activityLabel }}</p>
-                                    <p class="truncate text-xs text-gray-500">{{ $log->schedule->reference }} &middot;
-                                        {{ $log->schedule->driver->user->name }}</p>
-                                    <p class="text-xs text-gray-400">{{ $log->logged_at->diffForHumans() }}</p>
-                                </div>
-                            </a>
-                        @empty
-                            <p class="px-6 py-6 text-sm text-gray-500">No activity yet.</p>
-                        @endforelse
-                    </div>
-                </x-card>
-            </div>
-
-            <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <x-card class="lg:col-span-2">
-                    <div class="flex items-center justify-between px-6 pt-6">
-                        <h2 class="text-lg font-semibold text-[#12263F]">Today's trips</h2>
-                        <a href="{{ route('schedules.index') }}"
-                            class="text-sm font-semibold text-brand-600 hover:underline">View all</a>
-                    </div>
-                    <div class="mt-3 divide-y divide-gray-100 text-sm">
-                        @forelse ($today as $trip)
-                            <a href="{{ route('schedules.show', $trip) }}"
-                                class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50/60">
-                                <div>
-                                    <div class="font-medium text-[#12263F]">
-                                        {{ $trip->departure_at->format('g:i A') }} &middot; {{ $trip->reference }}
-                                        &middot; {{ $trip->driver->user->name }}
-                                    </div>
-                                    <div class="text-gray-500">{{ $trip->origin_address }} &rarr;
-                                        {{ $trip->destination_address }}</div>
-                                </div>
-                                <x-status-pill :status="$trip->status" />
-                            </a>
-                        @empty
-                            <x-empty-state title="No trips today" message="Assign a trip to get the day started."
-                                action-label="Assign trip" :action-href="route('schedules.create')" />
-                        @endforelse
-                    </div>
-                </x-card>
-
-                <x-card>
-                    <h2 class="px-6 pt-6 text-lg font-semibold text-[#12263F]">Licenses to renew</h2>
-                    <div class="mt-3 divide-y divide-gray-100 text-sm">
-                        @forelse ($expiring as $d)
-                            <a href="{{ route('drivers.show', $d) }}" class="block px-6 py-4 hover:bg-gray-50/60">
-                                <div class="font-medium text-[#12263F]">{{ $d->user->name }}</div>
-                                <div class="text-gray-500">
-                                    Expires {{ $d->license_expiry->format('M d, Y') }}
-                                    <span
-                                        class="ml-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase text-white {{ $d->license_alert === 'expired' ? 'bg-red-600' : 'bg-amber-500' }}">{{ $d->license_alert === 'expired' ? 'Expired' : 'Expiring' }}</span>
-                                </div>
-                            </a>
-                        @empty
-                            <p class="px-6 py-6 text-gray-500">No licenses expire in the next 30 days.</p>
-                        @endforelse
-                    </div>
-                </x-card>
-            </div>
         </div>
+        @endif
+
+        <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            @foreach ($stats as [$label, $value, $note, $href, $icon])
+                <a href="{{ $href }}"
+                    class="block rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+                    <div class="flex items-start justify-between">
+                        <p class="text-sm font-medium text-gray-500">{{ $label }}</p>
+                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                aria-hidden="true">{!! $icons[$icon] !!}</svg>
+                        </span>
+                    </div>
+                    <p class="mt-4 text-4xl font-bold text-[#12263F]">{{ $value }}</p>
+                    <p class="mt-2 text-xs text-gray-500">{{ $note }}</p>
+                </a>
+            @endforeach
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <x-card class="lg:col-span-2">
+                <div class="flex items-start justify-between px-6 pt-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-[#12263F]">Fleet map preview</h2>
+                        <p id="fleet-note" class="mt-1 text-xs text-gray-500">Live positions from driver phones</p>
+                    </div>
+                    <a href="{{ route('map.index') }}" class="text-sm font-semibold text-brand-600 hover:underline">View
+                        live map &rarr;</a>
+                </div>
+                <div class="mt-4 px-6 pb-6">
+                    <div id="fleet-map" style="height: 18rem; z-index: 0;"
+                        class="w-full overflow-hidden rounded-xl border border-gray-200"></div>
+                </div>
+            </x-card>
+
+            <x-card>
+                <h2 class="px-6 pt-6 text-lg font-semibold text-[#12263F]">Recent activity</h2>
+                <p class="px-6 text-xs text-gray-500">Latest trip updates</p>
+                <div class="mt-3 divide-y divide-gray-100">
+                    @forelse ($activity as $log)
+                        @php [$activityLabel, $chip] = $activityLabels[$log->status] ?? [ucfirst(str_replace('_', ' ', $log->status)), 'bg-gray-100 text-gray-600']; @endphp
+                        <a href="{{ route('schedules.show', $log->schedule) }}"
+                            class="flex items-start gap-3 px-6 py-4 hover:bg-gray-50/60">
+                            <span
+                                class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $chip }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    @if ($log->status === 'en_route')
+                                        <path d="M3 6h11v10H3z" />
+                                        <path d="M14 10h4l3 3v3h-7z" />
+                                        <circle cx="7" cy="17" r="2" />
+                                        <circle cx="17" cy="17" r="2" />
+                                    @else
+                                        <path d="M5 13l4 4L19 7" />
+                                    @endif
+                                </svg>
+                            </span>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-[#12263F]">{{ $activityLabel }}</p>
+                                <p class="truncate text-xs text-gray-500">{{ $log->schedule->reference }} &middot;
+                                    {{ $log->schedule->driver->user->name }}</p>
+                                <p class="text-xs text-gray-400">{{ $log->logged_at->diffForHumans() }}</p>
+                            </div>
+                        </a>
+                    @empty
+                        <p class="px-6 py-6 text-sm text-gray-500">No activity yet.</p>
+                    @endforelse
+                </div>
+            </x-card>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <x-card class="lg:col-span-2">
+                <div class="flex items-center justify-between px-6 pt-6">
+                    <h2 class="text-lg font-semibold text-[#12263F]">Today's trips</h2>
+                    <a href="{{ route('schedules.index') }}"
+                        class="text-sm font-semibold text-brand-600 hover:underline">View all</a>
+                </div>
+                <div class="mt-3 divide-y divide-gray-100 text-sm">
+                    @forelse ($today as $trip)
+                        <a href="{{ route('schedules.show', $trip) }}"
+                            class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50/60">
+                            <div>
+                                <div class="font-medium text-[#12263F]">
+                                    {{ $trip->departure_at->format('g:i A') }} &middot; {{ $trip->reference }}
+                                    &middot; {{ $trip->driver->user->name }}
+                                </div>
+                                <div class="text-gray-500">{{ $trip->origin_address }} &rarr;
+                                    {{ $trip->destination_address }}</div>
+                            </div>
+                            <x-status-pill :status="$trip->status" />
+                        </a>
+                    @empty
+                        <x-empty-state title="No trips today" message="Assign a trip to get the day started."
+                            action-label="Assign trip" :action-href="route('schedules.create')" />
+                    @endforelse
+                </div>
+            </x-card>
+
+            <x-card>
+                <h2 class="px-6 pt-6 text-lg font-semibold text-[#12263F]">Licenses to renew</h2>
+                <div class="mt-3 divide-y divide-gray-100 text-sm">
+                    @forelse ($expiring as $d)
+                        <a href="{{ route('drivers.show', $d) }}" class="block px-6 py-4 hover:bg-gray-50/60">
+                            <div class="font-medium text-[#12263F]">{{ $d->user->name }}</div>
+                            <div class="text-gray-500">
+                                Expires {{ $d->license_expiry->format('M d, Y') }}
+                                <span
+                                    class="ml-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase text-white {{ $d->license_alert === 'expired' ? 'bg-red-600' : 'bg-amber-500' }}">{{ $d->license_alert === 'expired' ? 'Expired' : 'Expiring' }}</span>
+                            </div>
+                        </a>
+                    @empty
+                        <p class="px-6 py-6 text-gray-500">No licenses expire in the next 30 days.</p>
+                    @endforelse
+                </div>
+            </x-card>
+        </div>
+    </div>
     </div>
 
 

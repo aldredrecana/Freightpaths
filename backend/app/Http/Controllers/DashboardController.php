@@ -7,10 +7,11 @@ use App\Models\Driver;
 use App\Models\Schedule;
 use App\Models\Truck;
 use Illuminate\Http\Request;
+use App\Services\StaffAlerts;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, StaffAlerts $staffAlerts)
     {
         $user = $request->user();
 
@@ -71,6 +72,7 @@ class DashboardController extends Controller
             ])
                 ->where("departure_at", "<=", now()->addHours($window))
                 ->count(),
+            "no_signal" => $staffAlerts->noSignal()->count(),
             "licenses" => Driver::whereDate(
                 "license_expiry",
                 "<=",

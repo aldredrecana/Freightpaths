@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\MapController;
+use App\Http\Controllers\AlertController;
 
 
 Route::get(
@@ -119,6 +120,9 @@ Route::middleware(["auth", "role:admin,dispatcher"])
     ->name("schedules.tracking");
 
 Route::middleware(["auth", "role:admin,dispatcher"])->group(function () {
+    // Alerts for the bell in the top bar (declined trips, no signal, not accepted yet).
+    Route::get("/alerts", AlertController::class)->name("alerts.index");
+
     Route::get("/map", [MapController::class, "index"])->name("map.index");
     Route::get("/map/data", [MapController::class, "data"])->name("map.data");
 });
