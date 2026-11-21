@@ -16,7 +16,7 @@
                 <div class="flex items-center gap-4">
                     <x-avatar :name="$driver->user->name" :seed="$driver->id" size="h-16 w-16 text-lg" />
                     <div>
-                        <h1 class="text-3xl font-bold tracking-tight text-[#12263F]">{{ $driver->user->name }}</h1>
+                        <h1 class="text-3xl font-bold tracking-tight text-[#0E2F30]">{{ $driver->user->name }}</h1>
                         <div class="mt-2"><x-status-pill :status="$driver->status" /></div>
                     </div>
                 </div>
@@ -66,24 +66,24 @@
             <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
                 <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div class="text-xs uppercase tracking-wider text-gray-400">Trips declined</div>
-                    <div class="mt-1 text-2xl font-bold text-[#12263F]">{{ $declineCount }}</div>
+                    <div class="mt-1 text-2xl font-bold text-[#0E2F30]">{{ $declineCount }}</div>
                 </div>
 
                 <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div class="text-xs uppercase tracking-wider text-gray-400">Late declines (within
                         {{ config('freightpath.late_window_hours') }} h of departure)</div>
-                    <div class="mt-1 text-2xl font-bold text-[#12263F]">{{ $lateDeclineCount }}</div>
+                    <div class="mt-1 text-2xl font-bold text-[#0E2F30]">{{ $lateDeclineCount }}</div>
                 </div>
             </div>
 
             <div class="mt-6 rounded-2xl border border-gray-200 bg-white shadow-sm">
-                <h2 class="px-6 pt-6 text-lg font-semibold text-[#12263F]">Recent trips</h2>
+                <h2 class="px-6 pt-6 text-lg font-semibold text-[#0E2F30]">Recent trips</h2>
                 <div class="mt-3 divide-y divide-gray-100 text-sm">
                     @forelse ($trips as $trip)
                         <a href="{{ route('schedules.show', $trip) }}"
                             class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50/60">
                             <div>
-                                <div class="font-medium text-[#12263F]">{{ $trip->reference }} &middot;
+                                <div class="font-medium text-[#0E2F30]">{{ $trip->reference }} &middot;
                                     {{ $trip->truck->plate_no }}</div>
                                 <div class="text-gray-500">{{ $trip->origin_address }} &rarr;
                                     {{ $trip->destination_address }}</div>

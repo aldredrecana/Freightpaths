@@ -22,10 +22,10 @@
             <div class="mt-8 rounded-2xl border border-gray-200 bg-white shadow-sm">
                 <div class="flex items-start justify-between gap-4 px-6 pt-6">
                     <div>
-                        <h2 class="text-lg font-semibold text-[#12263F]">Upcoming deliveries</h2>
+                        <h2 class="text-lg font-semibold text-[#0E2F30]">Upcoming deliveries</h2>
                         <p class="mt-1 text-xs text-gray-500">Scheduled assignments and routes</p>
                     </div>
-                    <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 text-[#12263F]">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 text-[#0E2F30]">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none"
                             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                             aria-hidden="true">
@@ -71,7 +71,7 @@
                             <div class="flex min-w-0 items-center gap-4">
                                 <x-avatar :name="$schedule->driver->user->name" :seed="$schedule->driver_id" />
                                 <div class="min-w-0">
-                                    <div class="font-semibold text-[#12263F]">{{ $schedule->origin_address }}
+                                    <div class="font-semibold text-[#0E2F30]">{{ $schedule->origin_address }}
                                         &rarr; {{ $schedule->destination_address }}</div>
                                     <div class="mt-0.5 text-sm text-gray-500">{{ $schedule->driver->user->name }}
                                         &middot; {{ $schedule->truck->plate_no }}</div>

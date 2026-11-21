@@ -36,16 +36,16 @@ const HTML = `<!DOCTYPE html>
     var bounds = [];
 
     if (s.path && s.path.length > 1) {
-      L.polyline(s.path, { color: '#0B7A5E', weight: 6, opacity: 0.9 }).addTo(layer);
+      L.polyline(s.path, { color: '#0B6E6E', weight: 6, opacity: 0.9 }).addTo(layer);
     }
     if (s.path && s.path.length) {
-      L.circleMarker(s.path[0], { radius: 9, color: '#fff', weight: 3, fillColor: '#0B7A5E', fillOpacity: 1 }).addTo(layer);
+      L.circleMarker(s.path[0], { radius: 9, color: '#fff', weight: 3, fillColor: '#0B6E6E', fillOpacity: 1 }).addTo(layer);
       s.path.forEach(function (p) { bounds.push(p); });
     }
     if (s.me) {
       var dot = document.createElement('div');
       dot.textContent = s.label || 'D';
-      dot.style.cssText = 'width:34px;height:34px;border-radius:17px;background:#0B7A5E;color:#fff;' +
+      dot.style.cssText = 'width:34px;height:34px;border-radius:17px;background:#0B6E6E;color:#fff;' +
         'border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font:700 15px sans-serif;' +
         'display:flex;align-items:center;justify-content:center;';
       L.marker(s.me, { icon: L.divIcon({ className: '', html: dot, iconSize: [34, 34], iconAnchor: [17, 17] }) }).addTo(layer);

@@ -5,7 +5,7 @@
             <p class="text-xs font-bold uppercase tracking-widest text-brand-600">Transactions</p>
             <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <h1 class="text-4xl font-bold tracking-tight text-[#12263F]">Trip history</h1>
+                    <h1 class="text-4xl font-bold tracking-tight text-[#0E2F30]">Trip history</h1>
                     <p class="mt-2 text-gray-500">Every milestone, in one place. Follow the journey from start to finish.
                     </p>
                 </div>
@@ -18,7 +18,7 @@
 
                 <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:col-span-4">
                     <div class="p-6 pb-4">
-                        <h2 class="text-lg font-semibold text-[#12263F]">Trip records</h2>
+                        <h2 class="text-lg font-semibold text-[#0E2F30]">Trip records</h2>
                         <p class="mt-1 text-xs text-gray-500">
                             {{ $trips->total() }} {{ \Illuminate\Support\Str::plural('journey', $trips->total()) }},
                             fully documented.
@@ -49,7 +49,7 @@
                             <a href="{{ route('transactions.index', array_merge(request()->query(), ['trip' => $trip->id])) }}"
                                 class="block border-l-4 px-6 py-5 {{ $active ? 'border-brand-600 bg-brand-50/60' : 'border-transparent hover:bg-gray-50/60' }}">
                                 <div class="flex items-center justify-between gap-3">
-                                    <span class="font-semibold text-[#12263F]">{{ $trip->reference }}</span>
+                                    <span class="font-semibold text-[#0E2F30]">{{ $trip->reference }}</span>
                                     <x-status-pill :status="$trip->status" />
                                 </div>
                                 <div class="mt-3 flex items-center gap-2 text-sm text-gray-500">
@@ -102,7 +102,7 @@
                                 <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Trip journey
                                 </p>
                                 <div class="mt-3 flex flex-wrap items-center gap-3">
-                                    <h2 class="text-3xl font-bold tracking-tight text-[#12263F]">
+                                    <h2 class="text-3xl font-bold tracking-tight text-[#0E2F30]">
                                         {{ $selected->reference }}</h2>
                                     <x-status-pill :status="$selected->status" />
                                 </div>
@@ -116,20 +116,20 @@
                             class="grid grid-cols-2 gap-6 border-y border-gray-100 bg-gray-50/70 px-8 py-6 text-sm md:grid-cols-4">
                             <div>
                                 <div class="text-xs uppercase tracking-wider text-gray-400">Driver</div>
-                                <div class="mt-1 font-medium text-[#12263F]">{{ $name }}</div>
+                                <div class="mt-1 font-medium text-[#0E2F30]">{{ $name }}</div>
                             </div>
                             <div>
                                 <div class="text-xs uppercase tracking-wider text-gray-400">Vehicle</div>
-                                <div class="mt-1 font-medium text-[#12263F]">{{ $selected->truck->plate_no }}</div>
+                                <div class="mt-1 font-medium text-[#0E2F30]">{{ $selected->truck->plate_no }}</div>
                             </div>
                             <div>
                                 <div class="text-xs uppercase tracking-wider text-gray-400">Date</div>
-                                <div class="mt-1 font-medium text-[#12263F]">
+                                <div class="mt-1 font-medium text-[#0E2F30]">
                                     {{ $selected->departure_at->format('F j, Y') }}</div>
                             </div>
                             <div>
                                 <div class="text-xs uppercase tracking-wider text-gray-400">Finished</div>
-                                <div class="mt-1 font-medium text-[#12263F]">
+                                <div class="mt-1 font-medium text-[#0E2F30]">
                                     {{ $finishedAt ? $finishedAt->format('M d, g:i A') : '-' }}</div>
                             </div>
                         </div>
@@ -171,7 +171,7 @@
 
                                     <div class="flex items-start justify-between gap-4">
                                         <div>
-                                            <p class="text-lg font-semibold text-[#12263F]">
+                                            <p class="text-lg font-semibold text-[#0E2F30]">
                                                 {{ $labels[$log->status] ?? ucfirst(str_replace('_', ' ', $log->status)) }}
                                             </p>
                                             <p class="mt-1 text-sm text-gray-500">{{ $defaults[$log->status] ?? '' }}
@@ -192,7 +192,7 @@
                         </ol>
                     @else
                         <div class="p-16 text-center text-gray-500">
-                            <p class="text-lg font-semibold text-[#12263F]">No finished trips yet</p>
+                            <p class="text-lg font-semibold text-[#0E2F30]">No finished trips yet</p>
                             <p class="mt-2 text-sm">Delivered and cancelled trips appear here with their full timeline.
                             </p>
                         </div>

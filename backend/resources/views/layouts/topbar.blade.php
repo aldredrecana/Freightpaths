@@ -17,7 +17,7 @@
         </button>
         <p class="text-sm text-gray-500">
             Workspace <span class="mx-1.5">/</span>
-            <span class="font-semibold text-[#12263F]">{{ $section }}</span>
+            <span class="font-semibold text-[#0E2F30]">{{ $section }}</span>
         </p>
     </div>
 
@@ -39,7 +39,7 @@
 
                 <div x-show="open" x-transition style="display: none;"
                     class="absolute right-0 z-30 mt-2 w-80 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
-                    <div class="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-[#12263F]">Alerts</div>
+                    <div class="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-[#0E2F30]">Alerts</div>
                     <template x-if="items.length === 0">
                         <p class="px-4 py-6 text-sm text-gray-500">All clear. Nothing needs your attention.</p>
                     </template>
@@ -98,7 +98,7 @@
                     aria-label="Account menu">
                     <span
                         class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">{{ $initials }}</span>
-                    <span class="hidden text-sm font-semibold text-[#12263F] sm:block">{{ $user->name }}</span>
+                    <span class="hidden text-sm font-semibold text-[#0E2F30] sm:block">{{ $user->name }}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 text-gray-400"
                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round" aria-hidden="true">

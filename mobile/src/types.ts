@@ -39,7 +39,7 @@ export const STATUS_LABEL: Record<string, string> = {
 
 export const STATUS_COLOR: Record<string, { bg: string; fg: string }> = {
   pending: { bg: "#FEF3C7", fg: "#92400E" },
-  accepted: { bg: "#E3F3ED", fg: "#0B7A5E" },
+  accepted: { bg: "#E7F5F5", fg: "#0B6E6E" },
   en_route: { bg: "#D1FAE5", fg: "#065F46" },
   delivered: { bg: "#E5E7EB", fg: "#374151" },
   cancelled: { bg: "#E5E7EB", fg: "#374151" },

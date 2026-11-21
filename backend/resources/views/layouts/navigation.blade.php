@@ -11,7 +11,8 @@
     class="fixed inset-0 z-30 bg-black/50 lg:hidden"></div>
 
 <aside :class="sidebar ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-[#0B2342] text-white transition-transform duration-200 lg:translate-x-0">
+    class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-[#073B3C]
+     text-white transition-transform duration-200 lg:translate-x-0">
     <div class="flex h-20 items-center justify-between px-6">
         <a href="{{ route('dashboard') }}"><x-brand-logo :light="true" /></a>
         <button @click="sidebar = false" class="rounded-lg p-1.5 text-white/60 hover:bg-white/10 lg:hidden"

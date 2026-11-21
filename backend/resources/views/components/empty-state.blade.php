@@ -7,7 +7,7 @@
             <path d="M4 13h5l1 2h4l1-2h5" />
         </svg>
     </div>
-    <p class="mt-4 text-lg font-semibold text-[#12263F]">{{ $title }}</p>
+    <p class="mt-4 text-lg font-semibold text-[#0E2F30]">{{ $title }}</p>
     @if ($message)
         <p class="mt-1 text-sm text-gray-500">{{ $message }}</p>
     @endif

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../auth";
 import { RouteMap } from "../../components/RouteMap";
@@ -12,6 +12,9 @@ import { colors, shadow } from "../../theme";
 import { useTrips } from "../../trips";
 import { dayWord, formatDay, formatTime } from "../../types";
 import { useApi } from "../../useApi";
+
+// The FreightPath truck mark (white truck and amber route), shown on a teal square.
+const LOGO = require("../../../assets/images/logo-mark.png");
 
 export default function Home() {
   const { user } = useAuth();
@@ -126,7 +129,11 @@ export default function Home() {
         <View style={styles.topRow} pointerEvents="box-none">
           <View style={styles.brandChip}>
             <View style={styles.brandLogo}>
-              <Text style={styles.brandLogoText}>F</Text>
+              <Image
+                source={LOGO}
+                style={styles.brandLogoImage}
+                accessibilityLabel="FreightPath logo"
+              />
             </View>
             <Text style={styles.brandName}>FreightPath</Text>
           </View>
@@ -242,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  brandLogoText: { color: "#fff", fontSize: 17, fontWeight: "800" },
+  brandLogoImage: { width: 30, height: 30 },
   brandName: { fontSize: 17, fontWeight: "800", color: colors.ink },
   onlinePill: {
     flexDirection: "row",

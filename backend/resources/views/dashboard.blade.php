@@ -119,7 +119,8 @@
                                 aria-hidden="true">{!! $icons[$icon] !!}</svg>
                         </span>
                     </div>
-                    <p class="mt-4 text-4xl font-bold text-[#12263F]">{{ $value }}</p>
+                    <p class="mt-4 text-4xl font-bold text-[
+                    ]">{{ $value }}</p>
                     <p class="mt-2 text-xs text-gray-500">{{ $note }}</p>
                 </a>
             @endforeach
@@ -129,7 +130,7 @@
             <x-card class="lg:col-span-2">
                 <div class="flex items-start justify-between px-6 pt-6">
                     <div>
-                        <h2 class="text-lg font-semibold text-[#12263F]">Fleet map preview</h2>
+                        <h2 class="text-lg font-semibold text-[#0E2F30]">Fleet map preview</h2>
                         <p id="fleet-note" class="mt-1 text-xs text-gray-500">Live positions from driver phones</p>
                     </div>
                     <a href="{{ route('map.index') }}" class="text-sm font-semibold text-brand-600 hover:underline">View
@@ -142,7 +143,7 @@
             </x-card>
 
             <x-card>
-                <h2 class="px-6 pt-6 text-lg font-semibold text-[#12263F]">Recent activity</h2>
+                <h2 class="px-6 pt-6 text-lg font-semibold text-[#0E2F30]">Recent activity</h2>
                 <p class="px-6 text-xs text-gray-500">Latest trip updates</p>
                 <div class="mt-3 divide-y divide-gray-100">
                     @forelse ($activity as $log)
@@ -165,7 +166,7 @@
                                 </svg>
                             </span>
                             <div class="min-w-0">
-                                <p class="text-sm font-semibold text-[#12263F]">{{ $activityLabel }}</p>
+                                <p class="text-sm font-semibold text-[#0E2F30]">{{ $activityLabel }}</p>
                                 <p class="truncate text-xs text-gray-500">{{ $log->schedule->reference }} &middot;
                                     {{ $log->schedule->driver->user->name }}</p>
                                 <p class="text-xs text-gray-400">{{ $log->logged_at->diffForHumans() }}</p>
@@ -181,7 +182,7 @@
         <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
             <x-card class="lg:col-span-2">
                 <div class="flex items-center justify-between px-6 pt-6">
-                    <h2 class="text-lg font-semibold text-[#12263F]">Today's trips</h2>
+                    <h2 class="text-lg font-semibold text-[#0E2F30]">Today's trips</h2>
                     <a href="{{ route('schedules.index') }}"
                         class="text-sm font-semibold text-brand-600 hover:underline">View all</a>
                 </div>
@@ -190,7 +191,7 @@
                         <a href="{{ route('schedules.show', $trip) }}"
                             class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50/60">
                             <div>
-                                <div class="font-medium text-[#12263F]">
+                                <div class="font-medium text-[#0E2F30]">
                                     {{ $trip->departure_at->format('g:i A') }} &middot; {{ $trip->reference }}
                                     &middot; {{ $trip->driver->user->name }}
                                 </div>
@@ -207,11 +208,11 @@
             </x-card>
 
             <x-card>
-                <h2 class="px-6 pt-6 text-lg font-semibold text-[#12263F]">Licenses to renew</h2>
+                <h2 class="px-6 pt-6 text-lg font-semibold text-[#0E2F30]">Licenses to renew</h2>
                 <div class="mt-3 divide-y divide-gray-100 text-sm">
                     @forelse ($expiring as $d)
                         <a href="{{ route('drivers.show', $d) }}" class="block px-6 py-4 hover:bg-gray-50/60">
-                            <div class="font-medium text-[#12263F]">{{ $d->user->name }}</div>
+                            <div class="font-medium text-[#0E2F30]">{{ $d->user->name }}</div>
                             <div class="text-gray-500">
                                 Expires {{ $d->license_expiry->format('M d, Y') }}
                                 <span
@@ -232,7 +233,7 @@
         (function() {
             const colors = {
                 resting: '#2563eb',
-                tracking: '#FF8A1F',
+                tracking: '#0B6E6E',
                 offline: '#dc2626',
                 waiting: '#6b7280'
             };

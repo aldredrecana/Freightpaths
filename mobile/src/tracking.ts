@@ -217,7 +217,7 @@ export async function startTracking(
       notificationTitle: "FreightPath trip in progress",
       notificationBody:
         "Your location is shared with the dispatcher until you mark the trip delivered.",
-      notificationColor: "#0B7A5E",
+      notificationColor: "#0B6E6E",
     },
   });
 

@@ -32,7 +32,7 @@
                 <x-card class="overflow-hidden lg:col-span-4">
                     <div class="flex items-center justify-between gap-3 p-6 pb-4">
                         <div>
-                            <h2 class="text-lg font-semibold text-[#12263F]">Trucks on the road</h2>
+                            <h2 class="text-lg font-semibold text-[#0E2F30]">Trucks on the road</h2>
                             <p id="map-count" class="mt-1 text-xs text-gray-500">Loading...</p>
                         </div>
                         <button id="map-all" type="button"
@@ -52,7 +52,7 @@
 
             const stateColor = {
                 resting: '#2563eb',
-                tracking: '#FF8A1F',
+                tracking: '#0B6E6E',
                 offline: '#dc2626',
                 waiting: '#6b7280'
             };
@@ -179,7 +179,7 @@
                         'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700',
                         initials(t.driver)));
                     const who = el('div', 'min-w-0');
-                    who.appendChild(el('div', 'truncate font-semibold text-[#12263F]', t.truck + ' \u00b7 ' + t
+                    who.appendChild(el('div', 'truncate font-semibold text-[#0E2F30]', t.truck + ' \u00b7 ' + t
                         .driver));
                     who.appendChild(el('div', 'text-xs text-gray-500', t.reference));
                     top.appendChild(who);
@@ -222,7 +222,7 @@
 
                     if (d.path.length > 1) {
                         L.polyline(d.path, {
-                            color: '#FF8A1F',
+                            color: '#0B6E6E',
                             weight: 4,
                             opacity: 0.9
                         }).addTo(layer);
@@ -293,7 +293,7 @@
                     'flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700',
                     initials(t.driver)));
                 const who = el('div');
-                who.appendChild(el('div', 'font-semibold text-[#12263F]', t.driver));
+                who.appendChild(el('div', 'font-semibold text-[#0E2F30]', t.driver));
                 who.appendChild(el('div', 'text-xs text-gray-500', d.message));
                 left.appendChild(who);
                 wrap.appendChild(left);

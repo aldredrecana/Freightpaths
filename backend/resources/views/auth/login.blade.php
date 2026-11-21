@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'FreightPath') }} - Sign in</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -13,25 +14,25 @@
 <body class="font-sans text-gray-900 antialiased">
     <div class="min-h-screen flex">
 
-        <div class="hidden lg:flex lg:w-1/2 bg-[#12263F] text-white flex-col justify-between p-16">
+        <div class="hidden lg:flex lg:w-1/2 bg-[#073B3C] text-white flex-col justify-between p-16">
             <x-brand-logo :light="true" />
 
             <div>
-                <p class="text-xs font-semibold uppercase tracking-widest text-brand-300">Connected fleets. Clearer
+                <p class="text-xs font-semibold uppercase tracking-widest text-accent-400">Connected fleets. Clearer
                     roads.</p>
                 <h1 class="mt-6 text-6xl font-bold leading-tight tracking-tight">Every mile.<br>Under control.</h1>
-                <p class="mt-6 max-w-md text-lg leading-relaxed text-brand-200">
+                <p class="mt-6 max-w-md text-lg leading-relaxed 	text-accent-100">
                     A better way to keep your drivers, trips, and operations moving together.
                 </p>
 
-                <div class="mt-16 flex items-center gap-4 text-brand-300">
+                <div class="mt-16 flex items-center gap-4 text-accent-400">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-7 w-7 shrink-0" fill="none"
                         stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
                         aria-hidden="true">
                         <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
                         <circle cx="12" cy="11" r="2" />
                     </svg>
-                    <div class="flex-1 border-t-2 border-dashed border-brand-300/40"></div>
+                    <div class="flex-1 border-t-2 border-dashed 	border-accent-400/40"></div>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-10 w-10 shrink-0"
                         fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
                         stroke-linejoin="round" aria-hidden="true">
@@ -40,7 +41,7 @@
                         <circle cx="7" cy="17" r="2" />
                         <circle cx="17" cy="17" r="2" />
                     </svg>
-                    <div class="flex-1 border-t-2 border-dashed border-brand-300/40"></div>
+                    <div class="flex-1 border-t-2 border-dashed 	border-accent-400/40"></div>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-7 w-7 shrink-0" fill="none"
                         stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
                         aria-hidden="true">
@@ -50,7 +51,7 @@
                 </div>
             </div>
 
-            <p class="text-sm text-brand-300/80">&copy; {{ date('Y') }} FreightPath. Built to keep you moving.</p>
+            <p class="text-sm text-accent-200/80">&copy; {{ date('Y') }} FreightPath. Built to keep you moving.</p>
         </div>
 
         <div class="flex w-full lg:w-1/2 items-center justify-center bg-white px-6 py-12">
@@ -59,7 +60,7 @@
 
                 <p class="mt-14 text-xs font-semibold uppercase tracking-widest text-gray-400">Your operations,
                     connected</p>
-                <h2 class="mt-4 text-4xl font-bold tracking-tight text-[#12263F]">Welcome back</h2>
+                <h2 class="mt-4 text-4xl font-bold tracking-tight text-[#0E2F30]">Welcome back</h2>
                 <p class="mt-3 text-gray-500">Sign in to your FreightPath account.</p>
 
                 <x-auth-session-status class="mt-6" :status="session('status')" />

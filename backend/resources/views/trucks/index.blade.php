@@ -25,7 +25,7 @@
                         @if ($dot)
                             <span class="h-2 w-2 rounded-full {{ $dot }}"></span>
                         @endif
-                        <span class="text-3xl font-bold text-[#12263F]">{{ $value }}</span>
+                        <span class="text-3xl font-bold text-[#0E2F30]">{{ $value }}</span>
                         <span class="text-sm text-gray-500">{{ $label }}</span>
                     </div>
                 @endforeach
@@ -84,7 +84,7 @@
                                 @forelse ($trucks as $truck)
                                     <tr class="cursor-pointer hover:bg-gray-50/60"
                                         onclick="window.location='{{ route('trucks.show', $truck) }}'">
-                                        <td class="px-6 py-5 font-medium text-[#12263F]">{{ $truck->plate_no }}</td>
+                                        <td class="px-6 py-5 font-medium text-[#0E2F30]">{{ $truck->plate_no }}</td>
                                         <td class="px-6 py-5 text-gray-700">{{ $truck->model }}</td>
                                         <td class="px-6 py-5 text-gray-700">{{ number_format($truck->capacity_kg) }} kg
                                         </td>

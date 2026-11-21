@@ -6,7 +6,7 @@
 
             <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <h1 class="text-4xl font-bold tracking-tight text-[#12263F]">Driver management</h1>
+                    <h1 class="text-4xl font-bold tracking-tight text-[#0E2F30]">Driver management</h1>
                     <p class="mt-2 text-gray-500">Your people behind the wheel. Keep every driver connected.</p>
                 </div>
                 @if (auth()->user()->hasRole('admin'))
@@ -38,7 +38,7 @@
                             @endif
                             {{ $label }}
                         </div>
-                        <p class="mt-2 text-3xl font-bold text-[#12263F]">{{ $value }}</p>
+                        <p class="mt-2 text-3xl font-bold text-[#0E2F30]">{{ $value }}</p>
                     </div>
                 @endforeach
             </div>
@@ -99,7 +99,7 @@
                                     <td class="px-6 py-5">
                                         <div class="flex items-center gap-3">
                                             <x-avatar :name="$driver->user->name" :seed="$driver->id" />
-                                            <span class="font-medium text-[#12263F]">{{ $driver->user->name }}</span>
+                                            <span class="font-medium text-[#0E2F30]">{{ $driver->user->name }}</span>
                                         </div>
                                     </td>
 

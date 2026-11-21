@@ -6,7 +6,7 @@
     <div x-show="open" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         @keydown.escape.window="open = false">
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" @click.outside="open = false">
-            <h3 class="text-lg font-semibold text-[#12263F]">{{ $title }}</h3>
+            <h3 class="text-lg font-semibold text-[#0E2F30]">{{ $title }}</h3>
             @if ($message)
                 <p class="mt-2 text-sm text-gray-600">{{ $message }}</p>
             @endif

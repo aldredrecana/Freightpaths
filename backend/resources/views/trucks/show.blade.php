@@ -14,7 +14,7 @@
 
             <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight text-[#12263F]">{{ $truck->plate_no }}</h1>
+                    <h1 class="text-3xl font-bold tracking-tight text-[#0E2F30]">{{ $truck->plate_no }}</h1>
                     <div class="mt-2"><x-status-pill :status="$truck->status" /></div>
                 </div>
                 <div class="flex items-center gap-4">
@@ -38,13 +38,13 @@
             </x-card>
 
             <x-card class="mt-6">
-                <h2 class="px-6 pt-6 text-lg font-semibold text-[#12263F]">Recent trips</h2>
+                <h2 class="px-6 pt-6 text-lg font-semibold text-[#0E2F30]">Recent trips</h2>
                 <div class="mt-3 divide-y divide-gray-100 text-sm">
                     @forelse ($trips as $trip)
                         <a href="{{ route('schedules.show', $trip) }}"
                             class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50/60">
                             <div>
-                                <div class="font-medium text-[#12263F]">{{ $trip->reference }} &middot;
+                                <div class="font-medium text-[#0E2F30]">{{ $trip->reference }} &middot;
                                     {{ $trip->driver->user->name }}</div>
                                 <div class="text-gray-500">{{ $trip->origin_address }} &rarr;
                                     {{ $trip->destination_address }}</div>

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,6 +17,9 @@ import { useAuth } from "../auth";
 import { Banner, Button } from "../components/ui";
 import { getApiUrl, normalizeApiUrl, setApiUrl } from "../server";
 import { colors } from "../theme";
+
+// The FreightPath truck mark (white truck and amber route), shown on a teal square.
+const LOGO = require("../../assets/images/logo-mark.png");
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
@@ -96,7 +100,11 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.logo}>
-          <Text style={styles.logoText}>F</Text>
+          <Image
+            source={LOGO}
+            style={styles.logoImage}
+            accessibilityLabel="FreightPath logo"
+          />
         </View>
         <Text style={styles.title}>Welcome back</Text>
         <Text style={styles.subtitle}>Log in to see your trips.</Text>
@@ -190,7 +198,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  logoText: { color: "#fff", fontSize: 34, fontWeight: "800" },
+  logoImage: { width: 64, height: 64 },
   title: { marginTop: 28, fontSize: 32, fontWeight: "800", color: colors.ink },
   subtitle: { marginTop: 4, fontSize: 17, color: colors.muted },
   form: { marginTop: 28, gap: 14 },
