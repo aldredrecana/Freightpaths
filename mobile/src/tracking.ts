@@ -19,6 +19,7 @@ const TASK_NAME = "freightpath-location";
 const QUEUE_KEY = "freightpath_ping_queue";
 const ACTIVE_KEY = "freightpath_active_trip";
 const SENT_KEY = "freightpath_last_sent";
+const CONSENT_KEY = "freightpath_location_consent_v1"; // saved once the driver agrees
 const MAX_QUEUE = 2000; // oldest points are dropped beyond this
 const BATCH = 100; // points per upload
 const GPS_EVERY_MS = 15_000; // ask the phone for a point this often
@@ -127,7 +128,29 @@ export async function flushQueue(): Promise<void> {
 }
 
 // ---- Start / stop ----
+// Privacy notice (Data Privacy Act of 2012). Asked once; the answer is saved on the phone.
+async function askConsent(): Promise<boolean> {
+  if ((await AsyncStorage.getItem(CONSENT_KEY)) === "yes") return true;
 
+  const agreed = await new Promise<boolean>((resolve) => {
+    Alert.alert(
+      "Location sharing",
+      "While a trip is on the way (from Start trip until Delivered), FreightPath records your phone's location, speed and time, " +
+        "even when the screen is off.\n\n" +
+        "Only your dispatcher and admin can see it. It is used to follow the delivery and record rest stops, " +
+        "and it is kept with the trip record.\n\n" +
+        "Tracking stops when you mark the trip Delivered.",
+      [
+        { text: "Not now", style: "cancel", onPress: () => resolve(false) },
+        { text: "I agree", onPress: () => resolve(true) },
+      ],
+      { cancelable: false },
+    );
+  });
+
+  if (agreed) await AsyncStorage.setItem(CONSENT_KEY, "yes");
+  return agreed;
+}
 function explainBackgroundPermission(): Promise<void> {
   return new Promise((resolve) => {
     Alert.alert(
@@ -145,6 +168,13 @@ export async function startTracking(
   const running = await Location.hasStartedLocationUpdatesAsync(TASK_NAME);
   if (running && (await readActiveTrip()) === tripId) return { ok: true };
   if (running) await stopTracking();
+  if (!(await askConsent())) {
+    return {
+      ok: false,
+      message:
+        'Location sharing is needed while a trip is on the way. Tap "Turn on" on the trip to read the notice again.',
+    };
+  }
 
   const foreground = await Location.requestForegroundPermissionsAsync();
   if (foreground.status !== "granted") {
@@ -179,7 +209,7 @@ export async function startTracking(
   await AsyncStorage.removeItem(SENT_KEY);
 
   await Location.startLocationUpdatesAsync(TASK_NAME, {
-    accuracy: Location.Accuracy.Balanced,
+    accuracy: Location.Accuracy.High, // GPS-level points, so rests are detected reliably
     timeInterval: GPS_EVERY_MS,
     distanceInterval: 0, // report even when standing still, so rests can be seen
     showsBackgroundLocationIndicator: true,
@@ -187,7 +217,7 @@ export async function startTracking(
       notificationTitle: "FreightPath trip in progress",
       notificationBody:
         "Your location is shared with the dispatcher until you mark the trip delivered.",
-      notificationColor: "#1d4ed8",
+      notificationColor: "#0B7A5E",
     },
   });
 
