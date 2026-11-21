@@ -137,6 +137,8 @@ class DriverController extends Controller
             $user->email = $data['email'];
             if (! empty($data['password'])) {
                 $user->password = Hash::make($data['password']);
+                // New password: sign the phone app out so the old password stops working there too.
+                $user->tokens()->delete();
             }
             $user->save();
 
@@ -168,6 +170,14 @@ class DriverController extends Controller
         return redirect()
             ->route('drivers.index')
             ->with('status', 'Driver deleted.');
+    }
+
+        // Admin button: signs this driver out of the phone app on every phone.
+    public function logoutPhone(Driver $driver)
+    {
+        $driver->user->tokens()->delete();
+
+        return back()->with('status', 'The driver was logged out of the phone app.');
     }
 
     public function show(Driver $driver)

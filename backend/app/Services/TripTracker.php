@@ -64,7 +64,7 @@ class TripTracker
         } elseif (! $last) {
             $state = 'waiting';
             $label = 'Waiting for GPS';
-            $message = "Waiting for the driver's phone to send its first GPS point. The app must be open on the phone.";
+            $message = "Waiting for the driver's phone to send its first GPS point. Make sure the phone is on, has signal, and location is allowed for the app.";
         } elseif ($secondsAgo > $maxGap) {
             $state = 'offline';
             $label = 'No signal';

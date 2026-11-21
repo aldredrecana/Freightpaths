@@ -27,6 +27,11 @@
                         <a href="{{ route('drivers.edit', $driver) }}"
                             class="rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white hover:bg-brand-700">Edit
                             driver</a>
+                        <form method="POST" action="{{ route('drivers.logout-phone', $driver) }}"
+                            onsubmit="return confirm('Log this driver out of the phone app? They will need to sign in again.')">
+                            @csrf
+                            <button class="text-sm font-semibold text-gray-700 hover:underline">Log out phone</button>
+                        </form>
                         <x-confirm-delete :action="route('drivers.destroy', $driver)" title="Delete this driver?" :message="'The login and profile of ' .
                             $driver->user->name .
                             ' will be removed. This cannot be undone.'" />

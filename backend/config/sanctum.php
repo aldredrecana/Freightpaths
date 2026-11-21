@@ -50,7 +50,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Phone logins expire after this many minutes (default 30 days). The driver then logs in again.
+    'expiration' => (int) env('SANCTUM_EXPIRATION', 43200),
 
     /*
     |--------------------------------------------------------------------------

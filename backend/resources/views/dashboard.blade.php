@@ -5,17 +5,43 @@
         $activeDrivers = $drivers->get('available', 0) + $drivers->get('on_trip', 0);
 
         $icons = [
-            'users' => '<circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.7 3.5 2.7 3.5 6" />',
-            'truck' => '<path d="M3 6h11v10H3z" /><path d="M14 10h4l3 3v3h-7z" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" />',
+            'users' =>
+                '<circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.7 3.5 2.7 3.5 6" />',
+            'truck' =>
+                '<path d="M3 6h11v10H3z" /><path d="M14 10h4l3 3v3h-7z" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" />',
             'package' => '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" /><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />',
             'calendar' => '<rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M8 3v4M16 3v4" />',
         ];
 
         $stats = [
-            ['Active drivers', $activeDrivers, $drivers->get('available', 0) . ' available · ' . $drivers->get('on_trip', 0) . ' on trip', route('drivers.index'), 'users'],
-            ['Trips today', $today->count(), $tripCounts['Ongoing'] . ' on the road now', route('schedules.index'), 'truck'],
-            ['Completed deliveries', $tripCounts['Completed'], 'All finished trips', route('transactions.index', ['status' => 'delivered']), 'package'],
-            ['Pending schedules', $tripCounts['Scheduled'], 'Waiting to be driven', route('schedules.index'), 'calendar'],
+            [
+                'Active drivers',
+                $activeDrivers,
+                $drivers->get('available', 0) . ' available · ' . $drivers->get('on_trip', 0) . ' on trip',
+                route('drivers.index'),
+                'users',
+            ],
+            [
+                'Trips today',
+                $today->count(),
+                $tripCounts['Ongoing'] . ' on the road now',
+                route('schedules.index'),
+                'truck',
+            ],
+            [
+                'Completed deliveries',
+                $tripCounts['Completed'],
+                'All finished trips',
+                route('transactions.index', ['status' => 'delivered']),
+                'package',
+            ],
+            [
+                'Pending schedules',
+                $tripCounts['Scheduled'],
+                'Waiting to be driven',
+                route('schedules.index'),
+                'calendar',
+            ],
         ];
 
         $alertItems = collect([
@@ -124,8 +150,10 @@
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round" aria-hidden="true">
                                         @if ($log->status === 'en_route')
-                                            <path d="M3 6h11v10H3z" /><path d="M14 10h4l3 3v3h-7z" /><circle cx="7"
-                                                cy="17" r="2" /><circle cx="17" cy="17" r="2" />
+                                            <path d="M3 6h11v10H3z" />
+                                            <path d="M14 10h4l3 3v3h-7z" />
+                                            <circle cx="7" cy="17" r="2" />
+                                            <circle cx="17" cy="17" r="2" />
                                         @else
                                             <path d="M5 13l4 4L19 7" />
                                         @endif
@@ -198,11 +226,18 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script>
+    <script type="module">
         (function() {
-            const colors = { resting: '#2563eb', tracking: '#FF8A1F', offline: '#dc2626', waiting: '#6b7280' };
+            const colors = {
+                resting: '#2563eb',
+                tracking: '#FF8A1F',
+                offline: '#dc2626',
+                waiting: '#6b7280'
+            };
 
-            const map = L.map('fleet-map', { scrollWheelZoom: false }).setView([14.17, 121.24], 9);
+            const map = L.map('fleet-map', {
+                scrollWheelZoom: false
+            }).setView([14.17, 121.24], 9);
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; OpenStreetMap contributors',
@@ -214,7 +249,9 @@
                 const note = document.getElementById('fleet-note');
                 try {
                     const res = await fetch(@json(route('map.data')), {
-                        headers: { Accept: 'application/json' },
+                        headers: {
+                            Accept: 'application/json'
+                        },
                         credentials: 'same-origin',
                     });
                     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -227,22 +264,31 @@
                         if (!t.last) return;
                         const ll = [t.last.lat, t.last.lng];
                         const marker = L.circleMarker(ll, {
-                            radius: 11, color: '#fff', weight: 3,
-                            fillColor: colors[t.state] || colors.waiting, fillOpacity: 1,
+                            radius: 11,
+                            color: '#fff',
+                            weight: 3,
+                            fillColor: colors[t.state] || colors.waiting,
+                            fillOpacity: 1,
                         }).addTo(layer);
                         const tip = document.createElement('span');
                         tip.textContent = t.driver + ' \u00b7 ' + t.label;
                         marker.bindTooltip(tip);
-                        marker.on('click', function() { window.location = t.url; });
+                        marker.on('click', function() {
+                            window.location = t.url;
+                        });
                         bounds.push(ll);
                     });
 
-                    note.textContent = data.trips.length
-                        ? data.trips.length + (data.trips.length === 1 ? ' trip' : ' trips') + ' on the road \u00b7 live positions'
-                        : 'No driver is on the road right now';
+                    note.textContent = data.trips.length ?
+                        data.trips.length + (data.trips.length === 1 ? ' trip' : ' trips') +
+                        ' on the road \u00b7 live positions' :
+                        'No driver is on the road right now';
 
                     if (bounds.length && !fitted) {
-                        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
+                        map.fitBounds(bounds, {
+                            padding: [40, 40],
+                            maxZoom: 13
+                        });
                         fitted = true;
                     }
                 } catch (e) {

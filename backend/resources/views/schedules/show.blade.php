@@ -11,8 +11,10 @@
                         <a href="{{ route('schedules.edit', $schedule) }}" class="text-brand-600 underline">Edit</a>
                     @endunless
 
-                    <x-confirm-delete :action="route('schedules.destroy', $schedule)" title="Delete this trip?"
-                        message="Only pending trips can be deleted." />
+                    @if ($schedule->status === 'pending')
+                        <x-confirm-delete :action="route('schedules.destroy', $schedule)" title="Delete this trip?"
+                            message="Only pending trips can be deleted." />
+                    @endif
                 @endif
             </div>
         </div>
@@ -167,11 +169,8 @@
                     <ul id="tracking-rests" class="text-sm text-gray-700"></ul>
                 </div>
 
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
-                    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-                <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
-                    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-                <script>
+
+                <script type="module">
                     (function() {
                         const card = document.getElementById('tracking-card');
                         const url = card.dataset.url;

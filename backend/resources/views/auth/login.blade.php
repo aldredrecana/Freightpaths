@@ -144,6 +144,10 @@
                         No account? <a href="{{ route('register') }}"
                             class="font-medium text-brand-600 hover:underline">Register</a>
                     </p>
+                @else
+                    <p class="mt-6 text-center text-sm text-gray-500">
+                        Forgot your password or need an account? Please ask your administrator.
+                    </p>
                 @endif
 
                 <p class="mt-10 text-center text-xs text-gray-400">Secure access. Smarter operations.</p>

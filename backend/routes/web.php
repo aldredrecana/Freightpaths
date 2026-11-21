@@ -30,13 +30,19 @@ Route::middleware('auth')->group(function () {
     );
 });
 
+
+
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('drivers', DriverController::class)->except([
         'index',
         'show',
-    ]);
+    ]); 
+    // Signs the driver out of the phone app (for a lost or changed phone).
+    Route::post('/drivers/{driver}/logout-phone', [DriverController::class, 'logoutPhone'])
+        ->whereNumber('driver')
+        ->name('drivers.logout-phone');
 });
 
 Route::middleware(['auth', 'role:admin,dispatcher'])
