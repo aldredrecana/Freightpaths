@@ -30,11 +30,31 @@ const HTML = `<!DOCTYPE html>
   var fitted = false;
   var lastRecenter = 0;
   var PAD = { paddingTopLeft: [40, 110], paddingBottomRight: [40, 330], maxZoom: 16 };
+  var PAD_SMALL = { padding: [36, 36], maxZoom: 16 }; // small map inside a card
+
+  // A round pin with a letter: A = pickup (green), B = drop-off (red).
+  function pin(point, letter, color) {
+    var el = document.createElement('div');
+    el.textContent = letter;
+    el.style.cssText = 'width:30px;height:30px;border-radius:15px;background:' + color + ';color:#fff;' +
+      'border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);font:700 14px sans-serif;' +
+      'display:flex;align-items:center;justify-content:center;';
+    return L.marker(point, { icon: L.divIcon({ className: '', html: el, iconSize: [30, 30], iconAnchor: [15, 15] }) });
+  }
 
   window.update = function (s) {
     layer.clearLayers();
     var bounds = [];
+    var pad = s.compact ? PAD_SMALL : PAD;
 
+    // Planned route: pickup and drop-off pins with a dashed straight line between them.
+    if (s.plan) {
+      if (s.plan.origin && s.plan.destination) {
+        L.polyline([s.plan.origin, s.plan.destination], { color: '#6b7280', weight: 3, dashArray: '8 8' }).addTo(layer);
+      }
+      if (s.plan.origin) { pin(s.plan.origin, 'A', '#059669').addTo(layer); bounds.push(s.plan.origin); }
+      if (s.plan.destination) { pin(s.plan.destination, 'B', '#dc2626').addTo(layer); bounds.push(s.plan.destination); }
+    }
     if (s.path && s.path.length > 1) {
       L.polyline(s.path, { color: '#0B6E6E', weight: 6, opacity: 0.9 }).addTo(layer);
     }
@@ -52,29 +72,43 @@ const HTML = `<!DOCTYPE html>
       bounds.push(s.me);
     }
 
-    if (s.recenter !== lastRecenter && s.me) {
+        if (s.recenter !== lastRecenter && s.me) {
       lastRecenter = s.recenter;
       map.setView(s.me, 16);
-      map.panBy([0, 110]);
+      if (!s.compact) map.panBy([0, 110]);
     } else if (!fitted && bounds.length) {
       fitted = true;
-      if (bounds.length > 1) map.fitBounds(bounds, PAD);
-      else { map.setView(bounds[0], 16); map.panBy([0, 110]); }
+      if (bounds.length > 1) map.fitBounds(bounds, pad);
+      else { map.setView(bounds[0], 15); if (!s.compact) map.panBy([0, 110]); }
     }
   };
 </script>
 </body>
 </html>`;
 
+type Point = [number, number];
+
 type Props = {
-  me: [number, number] | null;
-  path: [number, number][];
+  me: Point | null;
+  path: Point[];
   label: string;
   recenter: number;
   style?: StyleProp<ViewStyle>;
+  // Optional: pickup (A) and drop-off (B) pins set by the dispatcher.
+  plan?: { origin: Point | null; destination: Point | null };
+  // Optional: a small map inside a card (less padding, no room for a bottom sheet).
+  compact?: boolean;
 };
 
-export function RouteMap({ me, path, label, recenter, style }: Props) {
+export function RouteMap({
+  me,
+  path,
+  label,
+  recenter,
+  style,
+  plan,
+  compact,
+}: Props) {
   // (The library's own typing needs the extra <object> to accept props.)
   const ref = useRef<WebView<object>>(null);
   const [ready, setReady] = useState(false);
@@ -82,11 +116,11 @@ export function RouteMap({ me, path, label, recenter, style }: Props) {
   // Send the newest position and route into the map page.
   useEffect(() => {
     if (!ready) return;
-    const state = JSON.stringify({ me, path, label, recenter });
+    const state = JSON.stringify({ me, path, label, recenter, plan, compact });
     ref.current?.injectJavaScript(
       `if (window.update) { window.update(${state}); } true;`,
     );
-  }, [ready, me, path, label, recenter]);
+  }, [ready, me, path, label, recenter, plan, compact]);
 
   return (
     <WebView<object>

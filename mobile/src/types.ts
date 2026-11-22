@@ -25,8 +25,10 @@ export type Trip = {
     by: string | null;
   }[];
   rests?: { started_at: string; ended_at: string; minutes: number }[];
+  // Map pins set by the dispatcher, as [latitude, longitude], or null.
+  origin_point?: [number, number] | null;
+  destination_point?: [number, number] | null;
 };
-
 // Words the driver sees for each status.
 export const STATUS_LABEL: Record<string, string> = {
   pending: "Waiting for you",

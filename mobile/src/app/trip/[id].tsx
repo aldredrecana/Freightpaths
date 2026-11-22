@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../../api";
 import { StatusBadge } from "../../components/StatusBadge";
+import { TripRouteCard } from "../../components/TripRouteCard";
 import {
   Banner,
   Button,
@@ -202,6 +203,8 @@ export default function TripDetail() {
             origin={trip.origin_address}
             destination={trip.destination_address}
           />
+
+          <TripRouteCard trip={trip} />
         </Card>
 
         <View style={styles.tiles}>
