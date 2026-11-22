@@ -14,6 +14,21 @@ abstract class TestCase extends BaseTestCase
 {
     use RefreshDatabase;
 
+    // Safety check: RefreshDatabase deletes every table. Never let that happen to a real database
+    // (for example Supabase, when "php artisan config:cache" makes the tests read the real .env).
+    protected function beforeRefreshingDatabase()
+    {
+        $connection = config('database.connections.'.config('database.default'));
+        $database = $connection['database'] ?? '';
+        $host = $connection['host'] ?? '';
+
+        if (! app()->environment('testing') || $database !== 'freightpath_test' || ! in_array($host, ['127.0.0.1', 'localhost'], true)) {
+            fwrite(STDERR, "\n\nSTOPPED: the tests would delete the tables of database '{$database}' on '{$host}'.\n"
+                ."Run \"php artisan config:clear\" and try again.\n\n");
+            exit(1);
+        }
+    }
+
     /** A user with the given role (admin, dispatcher or driver). The password is "password". */
     protected function makeUser(string $role = 'dispatcher', array $attributes = []): User
     {
