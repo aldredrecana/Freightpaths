@@ -52,14 +52,19 @@ export default function LoginScreen() {
       clearTimeout(timer);
 
       // Our server answers 401 ("not logged in") on this address.
-      if (res.status !== 401) throw new Error("Not a FreightPath server");
+      if (res.status !== 401)
+        throw new Error("Answered with status " + res.status);
 
       await setApiUrl(url);
       setServerInput(url);
       setServerNote("Saved. The server answered.");
-    } catch {
+    } catch (e) {
       setServerNote(
-        "Cannot reach that address. Check it and your internet connection.",
+        "Cannot reach " +
+          url +
+          " (" +
+          (e instanceof Error ? e.message : String(e)) +
+          ")",
       );
     }
   }

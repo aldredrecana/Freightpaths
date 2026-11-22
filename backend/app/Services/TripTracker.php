@@ -11,18 +11,28 @@ class TripTracker
 {
     private const POINT_COLUMNS = ['latitude', 'longitude', 'accuracy', 'recorded_at'];
 
+    // How many of the newest points we look at to find the direction of travel.
+    private const HEADING_POINTS = 8;
+
+    // Two points closer than this are GPS jitter, not movement (meters).
+    private const HEADING_MIN_METERS = 15;
+
     // Status and last position only (cheap enough for a list of trips).
     public function summary(Schedule $schedule): array
     {
-        $last = $schedule->locationPings()
+        // The newest few points: the last one is the position, the others give the direction.
+        $recent = $schedule->locationPings()
             ->orderByDesc('recorded_at')
-            ->first(self::POINT_COLUMNS);
+            ->limit(self::HEADING_POINTS)
+            ->get(self::POINT_COLUMNS)
+            ->reverse()
+            ->values();
 
         $lastRest = $schedule->restPeriods()
             ->reorder('started_at', 'desc')
             ->first();
 
-        return $this->status($schedule, $last, $lastRest);
+        return $this->status($schedule, $recent->last(), $lastRest, $this->heading($recent));
     }
 
     // Status plus the full route and every rest (for the map of one trip).
@@ -34,7 +44,7 @@ class TripTracker
 
         $rests = $schedule->restPeriods;
 
-        return $this->status($schedule, $pings->last(), $rests->last()) + [
+        return $this->status($schedule, $pings->last(), $rests->last(), $this->heading($pings->slice(-self::HEADING_POINTS)->values())) + [
             'path' => $pings->map(fn ($p) => [$p->latitude, $p->longitude])->values(),
             'rests' => $rests->map(fn ($r) => [
                 'lat' => $r->latitude,
@@ -46,7 +56,44 @@ class TripTracker
         ];
     }
 
-    private function status(Schedule $schedule, ?LocationPing $last, ?RestPeriod $lastRest): array
+    // Direction of travel in degrees (0 = north, 90 = east), from the newest point back to the
+    // nearest older point that is far enough away. Null when the truck has not really moved.
+    private function heading($points): ?float
+    {
+        $last = $points->last();
+
+        if (! $last) {
+            return null;
+        }
+
+        foreach ($points->reverse()->skip(1) as $p) {
+            if ($this->meters($p, $last) >= self::HEADING_MIN_METERS) {
+                $lat1 = deg2rad($p->latitude);
+                $lat2 = deg2rad($last->latitude);
+                $dLng = deg2rad($last->longitude - $p->longitude);
+
+                $y = sin($dLng) * cos($lat2);
+                $x = cos($lat1) * sin($lat2) - sin($lat1) * cos($lat2) * cos($dLng);
+
+                return round(fmod(rad2deg(atan2($y, $x)) + 360, 360), 1);
+            }
+        }
+
+        return null;
+    }
+
+    // Distance in meters between two GPS points (haversine formula).
+    private function meters(LocationPing $a, LocationPing $b): float
+    {
+        $dLat = deg2rad($b->latitude - $a->latitude);
+        $dLng = deg2rad($b->longitude - $a->longitude);
+        $h = sin($dLat / 2) ** 2
+            + cos(deg2rad($a->latitude)) * cos(deg2rad($b->latitude)) * sin($dLng / 2) ** 2;
+
+        return 2 * 6371000 * asin(min(1, sqrt($h)));
+    }
+
+    private function status(Schedule $schedule, ?LocationPing $last, ?RestPeriod $lastRest, ?float $heading = null): array
     {
         $secondsAgo = $last ? max(0, now()->timestamp - $last->recorded_at->timestamp) : null;
         $maxGap = config('freightpath.rest_max_gap_minutes') * 60;
@@ -87,6 +134,7 @@ class TripTracker
                 'lat' => $last->latitude,
                 'lng' => $last->longitude,
                 'accuracy' => $last->accuracy,
+                'heading' => $heading,
             ] : null,
         ];
     }

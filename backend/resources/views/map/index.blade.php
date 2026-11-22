@@ -63,8 +63,17 @@
                 waiting: 'bg-gray-100 text-gray-600',
             };
 
-            const truckSvg =
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>';
+            // A truck seen from above, nose pointing up (north). It is turned to face the direction of travel.
+            function truckSvg(color) {
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 46" width="28" height="46">' +
+                    '<rect x="3" y="15" width="22" height="29" rx="3" fill="' + color +
+                    '" stroke="#fff" stroke-width="2"/>' +
+                    '<rect x="11" y="19" width="6" height="21" rx="2" fill="#fff" opacity=".25"/>' +
+                    '<rect x="5" y="2" width="18" height="12" rx="5" fill="' + color +
+                    '" stroke="#fff" stroke-width="2"/>' +
+                    '<rect x="8" y="4.5" width="12" height="4" rx="1.5" fill="#fff" opacity=".9"/>' +
+                    '</svg>';
+            }
 
             const map = L.map('map-canvas', {
                 zoomControl: false
@@ -97,14 +106,17 @@
                 }).join('');
             }
 
-            function truckIcon(color, selected) {
+            // heading = direction of travel in degrees (0 = north, 90 = east); null = not moving.
+            function truckIcon(color, selected, heading) {
+                const turn = heading === null || heading === undefined ? 0 : heading;
+                const size = selected ? 1.25 : 1;
                 return L.divIcon({
                     className: '',
-                    html: '<div style="width:40px;height:40px;border-radius:12px;background:' + color +
-                        ';display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35);' +
-                        (selected ? 'outline:3px solid #fff;' : '') + '">' + truckSvg + '</div>',
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20],
+                    html: '<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;' +
+                        'transform:rotate(' + turn + 'deg) scale(' + size + ');transition:transform .6s;' +
+                        'filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));">' + truckSvg(color) + '</div>',
+                    iconSize: [48, 48],
+                    iconAnchor: [24, 24], // the middle of the truck sits on the GPS point
                 });
             }
 
@@ -206,7 +218,8 @@
                         if (!t.last) return;
                         const ll = [t.last.lat, t.last.lng];
                         const marker = L.marker(ll, {
-                            icon: truckIcon(stateColor[t.state] || stateColor.waiting, false)
+                            icon: truckIcon(stateColor[t.state] || stateColor.waiting, false, t.last
+                                .heading)
                         }).addTo(layer);
                         marker.bindTooltip(el('span', '', t.driver), {
                             direction: 'top',
@@ -221,10 +234,20 @@
                     const d = routeData;
 
                     if (d.path.length > 1) {
+                        // Drawn like a highlighted road: a wide white edge with the teal route on top.
+                        L.polyline(d.path, {
+                            color: '#ffffff',
+                            weight: 10,
+                            opacity: 0.95,
+                            lineCap: 'round',
+                            lineJoin: 'round'
+                        }).addTo(layer);
                         L.polyline(d.path, {
                             color: '#0B6E6E',
-                            weight: 4,
-                            opacity: 0.9
+                            weight: 6,
+                            opacity: 1,
+                            lineCap: 'round',
+                            lineJoin: 'round'
                         }).addTo(layer);
                     }
                     d.path.forEach(function(p) {
@@ -251,7 +274,7 @@
                     });
                     if (d.last) {
                         L.marker([d.last.lat, d.last.lng], {
-                            icon: truckIcon(stateColor[d.state] || stateColor.waiting, true)
+                            icon: truckIcon(stateColor[d.state] || stateColor.waiting, true, d.last.heading)
                         }).addTo(layer);
                     }
                 }
