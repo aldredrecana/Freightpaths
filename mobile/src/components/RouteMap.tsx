@@ -47,9 +47,13 @@ const HTML = `<!DOCTYPE html>
     var bounds = [];
     var pad = s.compact ? PAD_SMALL : PAD;
 
-    // Planned route: pickup and drop-off pins with a dashed straight line between them.
+        // Planned route: the road route from pickup to drop-off when we have it,
+    // otherwise a dashed straight line that only shows the direction.
     if (s.plan) {
-      if (s.plan.origin && s.plan.destination) {
+      if (s.plan.line && s.plan.line.length > 1) {
+        L.polyline(s.plan.line, { color: '#ffffff', weight: 8, opacity: 0.9, lineJoin: 'round' }).addTo(layer);
+        L.polyline(s.plan.line, { color: '#1D4ED8', weight: 5, opacity: 0.85, lineJoin: 'round' }).addTo(layer);
+      } else if (s.plan.origin && s.plan.destination) {
         L.polyline([s.plan.origin, s.plan.destination], { color: '#6b7280', weight: 3, dashArray: '8 8' }).addTo(layer);
       }
       if (s.plan.origin) { pin(s.plan.origin, 'A', '#059669').addTo(layer); bounds.push(s.plan.origin); }
@@ -95,7 +99,8 @@ type Props = {
   recenter: number;
   style?: StyleProp<ViewStyle>;
   // Optional: pickup (A) and drop-off (B) pins set by the dispatcher.
-  plan?: { origin: Point | null; destination: Point | null };
+  // line = the road route from A to B (optional).
+  plan?: { origin: Point | null; destination: Point | null; line?: Point[] };
   // Optional: a small map inside a card (less padding, no room for a bottom sheet).
   compact?: boolean;
 };
