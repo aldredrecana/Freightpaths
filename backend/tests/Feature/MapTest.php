@@ -18,7 +18,7 @@ class MapTest extends TestCase
         $this->actingAs($driver->user)->getJson(route('map.data'))->assertForbidden();
 
         $this->actingAs($this->makeUser('dispatcher'))->get(route('map.index'))
-            ->assertOk()->assertSee('Live fleet tracking');
+            ->assertOk()->assertSee('GPS Tracking');
     }
 
     public function test_the_map_lists_only_trips_on_the_road(): void

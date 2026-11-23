@@ -9,7 +9,7 @@ use App\Models\Schedule;
 /** Works out where a trip's driver is and what the driver is doing, from GPS points and rests. */
 class TripTracker
 {
-    private const POINT_COLUMNS = ['latitude', 'longitude', 'accuracy', 'recorded_at'];
+    private const POINT_COLUMNS = ['latitude', 'longitude', 'accuracy', 'speed', 'recorded_at'];
     
     public function __construct(private RoadSnapper $snapper) {}
 
@@ -144,6 +144,9 @@ class TripTracker
             'last' => $last ? $this->lastPoint($last) + [
             'accuracy' => $last->accuracy,
             'heading' => $heading,
+            'seconds_ago' => $secondsAgo,
+         // The phone reports meters per second; negative means "unknown".
+            'speed_kmh' => $last->speed !== null && $last->speed >= 0 ? (int) round($last->speed * 3.6) : null,
             ] : null,
         ];
     }
