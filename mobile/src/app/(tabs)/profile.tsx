@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
-  KeyboardAvoidingView,
-  Platform,
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  type ScrollViewInstance,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth, type User } from "../../auth";
@@ -28,6 +28,23 @@ export default function ProfileScreen() {
   const call = useApi();
   const { user, setUser, signOut } = useAuth();
   const { trips } = useTrips();
+
+  // Keep the password boxes and buttons above the keyboard: add room at the bottom
+  // while the keyboard is open, and scroll down when a password box is tapped.
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const [keyboard, setKeyboard] = useState(0);
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", (e) =>
+      setKeyboard(e.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboard(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  const scrollDown = () =>
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250);
 
   const [contact, setContact] = useState(user?.contact_no ?? "");
   const [address, setAddress] = useState(user?.address ?? "");
@@ -139,12 +156,13 @@ export default function ProfileScreen() {
     : "—";
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <View style={styles.root}>
       <ScrollView
-        contentContainerStyle={[styles.body, { paddingTop: insets.top + 18 }]}
+        ref={scrollRef}
+        contentContainerStyle={[
+          styles.body,
+          { paddingTop: insets.top + 18, paddingBottom: 40 + keyboard },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.title}>Profile</Text>
@@ -211,6 +229,7 @@ export default function ProfileScreen() {
           <Field
             icon="lock-closed-outline"
             placeholder="Current password"
+            onFocus={scrollDown}
             value={current}
             onChangeText={setCurrent}
             secure
@@ -218,6 +237,7 @@ export default function ProfileScreen() {
           <Field
             icon="key-outline"
             placeholder="New password (8+ characters)"
+            onFocus={scrollDown}
             value={next}
             onChangeText={setNext}
             secure
@@ -225,6 +245,7 @@ export default function ProfileScreen() {
           <Field
             icon="key-outline"
             placeholder="Type the new password again"
+            onFocus={scrollDown}
             value={confirm}
             onChangeText={setConfirm}
             secure
@@ -245,7 +266,7 @@ export default function ProfileScreen() {
           onPress={confirmSignOut}
         />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -274,6 +295,7 @@ function Field({
   onChangeText,
   secure = false,
   keyboardType = "default",
+  onFocus,
 }: {
   icon: IconName;
   placeholder: string;
@@ -281,6 +303,7 @@ function Field({
   onChangeText: (text: string) => void;
   secure?: boolean;
   keyboardType?: "default" | "phone-pad";
+  onFocus?: () => void;
 }) {
   return (
     <View style={styles.field}>
@@ -295,6 +318,7 @@ function Field({
         autoCapitalize={secure ? "none" : "sentences"}
         autoCorrect={false}
         keyboardType={keyboardType}
+        onFocus={onFocus}
       />
     </View>
   );
@@ -302,7 +326,7 @@ function Field({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  body: { paddingHorizontal: 18, paddingBottom: 40, gap: 14 },
+  body: { paddingHorizontal: 18, gap: 14 },
   title: {
     fontSize: 30,
     fontWeight: "800",
