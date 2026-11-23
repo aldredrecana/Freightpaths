@@ -166,7 +166,11 @@ export async function startTracking(
   tripId: number,
 ): Promise<{ ok: boolean; message?: string }> {
   const running = await Location.hasStartedLocationUpdatesAsync(TASK_NAME);
-  if (running && (await readActiveTrip()) === tripId) return { ok: true };
+  if (running && (await readActiveTrip()) === tripId) {
+    // Already tracking. If nothing has been sent yet (e.g. app reopened), try a quick point.
+    if (!(await AsyncStorage.getItem(SENT_KEY))) sendFirstPointNow(tripId);
+    return { ok: true };
+  }
   if (running) await stopTracking();
   if (!(await askConsent())) {
     return {
@@ -221,9 +225,39 @@ export async function startTracking(
     },
   });
 
+  sendFirstPointNow(tripId); // don't wait for the first background GPS fix
   return { ok: true };
 }
 
+// The background task can take a minute or more for its first point (a GPS "cold start",
+// especially indoors). So right after Start trip we send one quick point ourselves:
+// the phone's last known spot if it is fresh, otherwise a fast Wi-Fi/cell-tower fix.
+async function sendFirstPointNow(tripId: number): Promise<void> {
+  try {
+    const loc =
+      (await Location.getLastKnownPositionAsync({
+        maxAge: 60_000, // at most 1 minute old
+        requiredAccuracy: 200, // within 200 m
+      })) ??
+      (await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced, // fast: uses Wi-Fi and cell towers too
+      }));
+
+    if ((await readActiveTrip()) !== tripId) return; // the trip ended meanwhile
+
+    await enqueue({
+      schedule_id: tripId,
+      lat: loc.coords.latitude,
+      lng: loc.coords.longitude,
+      accuracy: loc.coords.accuracy ?? null,
+      speed: loc.coords.speed ?? null,
+      recorded_at: new Date(loc.timestamp).toISOString(),
+    });
+    await flushQueue();
+  } catch {
+    // No quick point available: the background task will send the first one.
+  }
+}
 export async function stopTracking(flushFirst = true): Promise<void> {
   if (await Location.hasStartedLocationUpdatesAsync(TASK_NAME)) {
     await Location.stopLocationUpdatesAsync(TASK_NAME);
