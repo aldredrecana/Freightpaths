@@ -52,7 +52,13 @@ class ScheduleController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('schedules.index', compact('schedules', 'q', 'status'));
+                // How many trips are in each status, for the filter tabs.
+        $counts = Schedule::whereIn('status', Schedule::ACTIVE)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        return view('schedules.index', compact('schedules', 'q', 'status', 'counts'));
     }
 
     public function create()
