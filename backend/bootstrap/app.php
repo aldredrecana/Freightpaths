@@ -14,9 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias([
+                $middleware->alias([
             'role' => EnsureUserHasRole::class,
         ]);
+
+        // Railway (and most hosts) put a proxy in front of the app that handles HTTPS.
+        // Trusting it lets Laravel know the visitor is on https, so links, CSS and forms use https too.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
