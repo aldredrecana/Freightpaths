@@ -5,74 +5,74 @@
 
         {{-- Map (edge to edge) --}}
         <section class="relative h-[60vh] min-w-0 flex-1 lg:h-auto" style="z-index: 0;">
-            <div id="map-canvas" class="absolute inset-0">
+            <div id="map-canvas" class="absolute inset-0"></div>
 
-                {{-- Title and legend, floating on the map --}}
-                <div class="pointer-events-none absolute left-3 top-3 z-[1000] flex flex-col gap-2">
-                    <div class="pointer-events-auto rounded-md border border-gray-200 bg-white/95 px-3 py-2 shadow-sm">
-                        <h1 class="text-sm font-semibold text-[#0E2F30]">GPS Tracking</h1>
-                        <p class="mt-0.5 text-[11px] text-gray-500">Location updates every 15 seconds</p>
-                    </div>
-                    <div
-                        class="pointer-events-auto flex flex-wrap gap-x-3 gap-y-1 rounded-md border border-gray-200 bg-white/95 px-3 py-1.5 text-[11px] text-gray-600 shadow-sm">
-                        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full"
-                                style="background:#0B6E6E"></span>On the road</span>
-                        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full"
-                                style="background:#2563eb"></span>Resting</span>
-                        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full"
-                                style="background:#dc2626"></span>No signal</span>
-                        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full"
-                                style="background:#6b7280"></span>Waiting</span>
-                    </div>
+            {{-- Title and legend, floating on the map --}}
+            <div class="pointer-events-none absolute left-3 top-3 z-[1000] flex flex-col gap-2">
+                <div class="pointer-events-auto rounded-md border border-gray-200 bg-white/95 px-3 py-2 shadow-sm">
+                    <h1 class="text-sm font-semibold text-[#0E2F30]">GPS Tracking</h1>
+                    <p class="mt-0.5 text-[11px] text-gray-500">Location updates every 15 seconds</p>
                 </div>
+                <div
+                    class="pointer-events-auto flex flex-wrap gap-x-3 gap-y-1 rounded-md border border-gray-200 bg-white/95 px-3 py-1.5 text-[11px] text-gray-600 shadow-sm">
+                    <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full"
+                            style="background:#0B6E6E"></span>On the road</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full"
+                            style="background:#2563eb"></span>Resting</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full"
+                            style="background:#dc2626"></span>No signal</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full"
+                            style="background:#6b7280"></span>Waiting</span>
+                </div>
+            </div>
 
-                {{-- Empty map message --}}
-                <div id="map-empty" style="display: none;"
-                    class="pointer-events-none absolute inset-0 z-[999] flex items-center justify-center">
-                    <div class="rounded-md border border-gray-200 bg-white/95 px-5 py-4 text-center shadow-sm">
-                        <p class="text-sm font-semibold text-[#0E2F30]">No trucks on the road</p>
-                        <p class="mt-1 text-xs text-gray-500">A truck appears here when its driver taps Start trip.</p>
-                    </div>
+            {{-- Empty map message --}}
+            <div id="map-empty" style="display: none;"
+                class="pointer-events-none absolute inset-0 z-[999] flex items-center justify-center">
+                <div class="rounded-md border border-gray-200 bg-white/95 px-5 py-4 text-center shadow-sm">
+                    <p class="text-sm font-semibold text-[#0E2F30]">No trucks on the road</p>
+                    <p class="mt-1 text-xs text-gray-500">A truck appears here when its driver taps Start trip.</p>
                 </div>
+            </div>
 
-                {{-- The selected trip, floating at the bottom of the map --}}
-                <div id="map-info" style="display: none;"
-                    class="absolute bottom-3 left-3 right-3 z-[1000] rounded-md border border-gray-200 bg-white shadow-md lg:right-auto lg:w-[32rem]">
-                </div>
+            {{-- The selected trip, floating at the bottom of the map --}}
+            <div id="map-info" style="display: none;"
+                class="absolute bottom-3 left-3 right-3 z-[1000] rounded-md border border-gray-200 bg-white shadow-md lg:right-auto lg:w-[32rem]">
+            </div>
         </section>
 
         {{-- Side panel: trucks on the road --}}
-        <aside class="flex w-full flex-col border-l border-gray-200 bg-white lg:w-[22rem] lg:shrink-0"></aside>
-        <div class="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
-            <div class="flex items-center gap-2">
-                <h2 class="text-sm font-semibold text-[#0E2F30]">On the road</h2>
-                <span id="map-count"
-                    class="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600">0</span>
+        <aside class="flex w-full flex-col border-l border-gray-200 bg-white lg:w-[22rem] lg:shrink-0">
+            <div class="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-sm font-semibold text-[#0E2F30]">On the road</h2>
+                    <span id="map-count"
+                        class="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600">0</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button id="map-all" type="button"
+                        class="rounded border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50">Show
+                        all</button>
+                    <button id="map-refresh" type="button" title="Refresh now" aria-label="Refresh now"
+                        class="rounded border border-gray-200 p-1.5 text-gray-600 hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M21 12a9 9 0 1 1-3-6.7L21 8" />
+                            <path d="M21 3v5h-5" />
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="flex items-center gap-1">
-                <button id="map-all" type="button"
-                    class="rounded border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50">Show
-                    all</button>
-                <button id="map-refresh" type="button" title="Refresh now" aria-label="Refresh now"
-                    class="rounded border border-gray-200 p-1.5 text-gray-600 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        aria-hidden="true">
-                        <path d="M21 12a9 9 0 1 1-3-6.7L21 8" />
-                        <path d="M21 3v5h-5" />
-                    </svg>
-                </button>
+
+            <div class="border-b border-gray-200 px-4 py-2">
+                <input id="map-search" type="search" placeholder="Search driver, plate or trip no."
+                    class="w-full rounded border border-gray-200 px-2.5 py-1.5 text-xs placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500">
             </div>
-        </div>
 
-        <div class="border-b border-gray-200 px-4 py-2">
-            <input id="map-search" type="search" placeholder="Search driver, plate or trip no."
-                class="w-full rounded border border-gray-200 px-2.5 py-1.5 text-xs placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500">
-        </div>
+            <div id="map-list" class="flex-1 divide-y divide-gray-100 overflow-y-auto" style="max-height: 70vh;"></div>
 
-        <div id="map-list" class="flex-1 divide-y divide-gray-100 overflow-y-auto" style="max-height: 70vh;"></div>
-
-        <p id="map-updated" class="border-t border-gray-200 px-4 py-2 text-[11px] text-gray-400">Loading...</p>
+            <p id="map-updated" class="border-t border-gray-200 px-4 py-2 text-[11px] text-gray-400">Loading...</p>
         </aside>
     </div>
 
