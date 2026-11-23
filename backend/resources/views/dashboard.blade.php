@@ -31,7 +31,7 @@
             [
                 'Completed deliveries',
                 $tripCounts['Completed'],
-                'All finished trips',
+                'All time',
                 route('transactions.index', ['status' => 'delivered']),
                 'package',
             ],
@@ -72,160 +72,186 @@
         ])->filter(fn($a) => $a[0] > 0);
 
         $activityLabels = [
-            'pending' => ['Trip assigned', 'bg-gray-100 text-gray-600'],
-            'accepted' => ['Trip accepted', 'bg-emerald-50 text-emerald-600'],
-            'en_route' => ['Trip started', 'bg-brand-50 text-brand-600'],
-            'delivered' => ['Delivery completed', 'bg-emerald-50 text-emerald-600'],
-            'needs_reassignment' => ['Driver declined', 'bg-red-50 text-red-600'],
-            'cancelled' => ['Trip cancelled', 'bg-red-50 text-red-600'],
+            'pending' => ['Trip assigned', 'bg-gray-400'],
+            'accepted' => ['Trip accepted', 'bg-amber-500'],
+            'en_route' => ['Trip started', 'bg-brand-500'],
+            'delivered' => ['Delivery completed', 'bg-emerald-500'],
+            'needs_reassignment' => ['Driver declined', 'bg-red-500'],
+            'cancelled' => ['Trip cancelled', 'bg-red-500'],
         ];
     @endphp
 
-    <div class="py-10">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {{-- Dense, work-tool layout: compact header, flat bordered panels, full width. --}}
+    <div class="px-4 py-5 sm:px-6 lg:px-8">
 
-            <x-page-header crumb="Dashboard" eyebrow="Overview" :title="$greeting . ', ' . $first"
-                subtitle="Here's what's happening across your fleet today.">
-                <x-slot name="actions">
-                    <x-btn :href="route('schedules.create')">+ New schedule</x-btn>
-                </x-slot>
-            </x-page-header>
+        {{-- Header: title and date on the left, the main action on the right --}}
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h1 class="text-xl font-semibold text-[#0E2F30]">Dashboard</h1>
+                <p class="text-xs text-gray-500">{{ $greeting }}, {{ $first }} &middot;
+                    {{ now()->format('l, F j, Y') }}</p>
+            </div>
+            <a href="{{ route('schedules.create') }}"
+                class="inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700">
+                <span aria-hidden="true">+</span> New schedule
+            </a>
+        </div>
 
-            @if ($alertItems->isEmpty())
-                <div
-                    class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
-                    All clear. Nothing needs your attention right now.
-                </div>
-            @else
-                <div class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    @foreach ($alertItems as [$n, $label, $href, $cls])
-                        <a href="{{ $href }}"
-                            class="block rounded-2xl border p-4 text-sm font-medium hover:shadow-sm {{ $cls }}">
-                            <span class="text-2xl font-bold">{{ $n }}</span> {{ $label }}
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-
-            <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-                @foreach ($stats as [$label, $value, $note, $href, $icon])
+        {{-- Alerts: one slim strip --}}
+        @if ($alertItems->isEmpty())
+            <div
+                class="mt-4 flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                All clear. Nothing needs your attention right now.
+            </div>
+        @else
+            <div class="mt-4 flex flex-wrap gap-2">
+                @foreach ($alertItems as [$n, $label, $href, $cls])
                     <a href="{{ $href }}"
-                        class="block rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-                        <div class="flex items-start justify-between">
-                            <p class="text-sm font-medium text-gray-500">{{ $label }}</p>
-                            <span
-                                class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5"
-                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">{!! $icons[$icon] !!}</svg>
-                            </span>
-                        </div>
-                        <p class="mt-4 text-4xl font-bold text-[#0E2F30]">{{ $value }}</p>
-                        <p class="mt-2 text-xs text-gray-500">{{ $note }}</p>
+                        class="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium hover:brightness-95 {{ $cls }}">
+                        <span class="font-bold">{{ $n }}</span> {{ $label }} <span
+                            aria-hidden="true">&rarr;</span>
                     </a>
                 @endforeach
             </div>
+        @endif
 
-            <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {{-- flex-col + flex-1: the map grows to the height of "Recent activity" beside it. --}}
-                <x-card class="flex flex-col lg:col-span-2">
-                    <div class="flex items-start justify-between px-6 pt-6">
-                        <div>
-                            <h2 class="text-lg font-semibold text-[#0E2F30]">Fleet map preview</h2>
-                            <p id="fleet-note" class="mt-1 text-xs text-gray-500">Live positions from driver phones</p>
-                        </div>
-                        <a href="{{ route('map.index') }}"
-                            class="text-sm font-semibold text-brand-600 hover:underline">View live map &rarr;</a>
+        {{-- Key numbers: one panel split into four --}}
+        <div
+            class="mt-4 grid grid-cols-2 divide-gray-200 rounded-md border border-gray-200 bg-white xl:grid-cols-4 xl:divide-x">
+            @foreach ($stats as [$label, $value, $note, $href, $icon])
+                <a href="{{ $href }}" class="group block px-4 py-3 hover:bg-gray-50">
+                    <div
+                        class="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">{!! $icons[$icon] !!}</svg>
+                        {{ $label }}
                     </div>
-                    <div class="mt-4 flex-1 px-6 pb-6">
-                        <div id="fleet-map" style="z-index: 0;"
-                            class="h-full min-h-[18rem] w-full overflow-hidden rounded-xl border border-gray-200"></div>
-                    </div>
-                </x-card>
+                    <div class="mt-1 text-2xl font-semibold tabular-nums text-[#0E2F30]">{{ $value }}</div>
+                    <div class="text-xs text-gray-500">{{ $note }}</div>
+                </a>
+            @endforeach
+        </div>
 
-                <x-card>
-                    <h2 class="px-6 pt-6 text-lg font-semibold text-[#0E2F30]">Recent activity</h2>
-                    <p class="px-6 text-xs text-gray-500">Latest trip updates</p>
-                    <div class="mt-3 divide-y divide-gray-100">
-                        @forelse ($activity as $log)
-                            @php [$activityLabel, $chip] = $activityLabels[$log->status] ?? [ucfirst(str_replace('_', ' ', $log->status)), 'bg-gray-100 text-gray-600']; @endphp
-                            <a href="{{ route('schedules.show', $log->schedule) }}"
-                                class="flex items-start gap-3 px-6 py-4 hover:bg-gray-50/60">
-                                <span
-                                    class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $chip }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        @if ($log->status === 'en_route')
-                                            <path d="M3 6h11v10H3z" />
-                                            <path d="M14 10h4l3 3v3h-7z" />
-                                            <circle cx="7" cy="17" r="2" />
-                                            <circle cx="17" cy="17" r="2" />
-                                        @else
-                                            <path d="M5 13l4 4L19 7" />
-                                        @endif
-                                    </svg>
-                                </span>
-                                <div class="min-w-0">
-                                    <p class="text-sm font-semibold text-[#0E2F30]">{{ $activityLabel }}</p>
-                                    <p class="truncate text-xs text-gray-500">{{ $log->schedule->reference }} &middot;
-                                        {{ $log->schedule->driver->user->name }}</p>
-                                    <p class="text-xs text-gray-400">{{ $log->logged_at->diffForHumans() }}</p>
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {{-- Fleet map: edge to edge inside its panel --}}
+            <section class="flex flex-col overflow-hidden rounded-md border border-gray-200 bg-white lg:col-span-2">
+                <div class="flex items-center justify-between border-b border-gray-200 px-4 py-2.5">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-semibold text-[#0E2F30]">Fleet map</h2>
+                        <span id="fleet-note" class="text-xs text-gray-500">Loading...</span>
+                    </div>
+                    <a href="{{ route('map.index') }}" class="text-xs font-medium text-brand-700 hover:underline">Open
+                        GPS
+                        Tracking &rarr;</a>
+                </div>
+                <div id="fleet-map" style="z-index: 0;" class="min-h-[20rem] w-full flex-1"></div>
+            </section>
+
+            {{-- Recent activity --}}
+            <section class="rounded-md border border-gray-200 bg-white">
+                <div class="border-b border-gray-200 px-4 py-2.5">
+                    <h2 class="text-sm font-semibold text-[#0E2F30]">Recent activity</h2>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    @forelse ($activity as $log)
+                        @php [$activityLabel, $chip] = $activityLabels[$log->status] ?? [ucfirst(str_replace('_', ' ', $log->status)), 'bg-gray-400']; @endphp
+                        <a href="{{ route('schedules.show', $log->schedule) }}"
+                            class="flex items-start gap-2.5 px-4 py-2.5 hover:bg-gray-50">
+                            <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ $chip }}"></span>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-baseline justify-between gap-2">
+                                    <p class="truncate text-sm font-medium text-[#0E2F30]">{{ $activityLabel }}</p>
+                                    <p class="shrink-0 text-[11px] text-gray-400">
+                                        {{ $log->logged_at->diffForHumans(null, false, true) }}</p>
                                 </div>
-                            </a>
-                        @empty
-                            <p class="px-6 py-6 text-sm text-gray-500">No activity yet.</p>
-                        @endforelse
-                    </div>
-                </x-card>
-            </div>
+                                <p class="truncate text-xs text-gray-500">{{ $log->schedule->reference }} &middot;
+                                    {{ $log->schedule->driver->user->name }}</p>
+                            </div>
+                        </a>
+                    @empty
+                        <p class="px-4 py-6 text-xs text-gray-500">No activity yet.</p>
+                    @endforelse
+                </div>
+            </section>
+        </div>
 
-            <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <x-card class="lg:col-span-2">
-                    <div class="flex items-center justify-between px-6 pt-6">
-                        <h2 class="text-lg font-semibold text-[#0E2F30]">Today's trips</h2>
-                        <a href="{{ route('schedules.index') }}"
-                            class="text-sm font-semibold text-brand-600 hover:underline">View all</a>
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {{-- Today's trips: a real table --}}
+            <section class="overflow-hidden rounded-md border border-gray-200 bg-white lg:col-span-2">
+                <div class="flex items-center justify-between border-b border-gray-200 px-4 py-2.5">
+                    <h2 class="text-sm font-semibold text-[#0E2F30]">Today's trips <span
+                            class="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600">{{ $today->count() }}</span>
+                    </h2>
+                    <a href="{{ route('schedules.index') }}"
+                        class="text-xs font-medium text-brand-700 hover:underline">View
+                        all &rarr;</a>
+                </div>
+                @if ($today->isEmpty())
+                    <x-empty-state title="No trips today" message="Assign a trip to get the day started."
+                        action-label="Assign trip" :action-href="route('schedules.create')" />
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead
+                                class="border-b border-gray-200 bg-gray-50 text-[11px] uppercase tracking-wide text-gray-500">
+                                <tr>
+                                    <th class="px-4 py-2 font-medium">Time</th>
+                                    <th class="px-4 py-2 font-medium">Trip</th>
+                                    <th class="px-4 py-2 font-medium">Driver</th>
+                                    <th class="px-4 py-2 font-medium">Truck</th>
+                                    <th class="px-4 py-2 font-medium">Route</th>
+                                    <th class="px-4 py-2 font-medium">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach ($today as $trip)
+                                    <tr class="cursor-pointer hover:bg-gray-50"
+                                        onclick="window.location='{{ route('schedules.show', $trip) }}'">
+                                        <td class="whitespace-nowrap px-4 py-2 tabular-nums text-gray-700">
+                                            {{ $trip->departure_at->format('g:i A') }}</td>
+                                        <td class="whitespace-nowrap px-4 py-2">
+                                            <a href="{{ route('schedules.show', $trip) }}"
+                                                class="font-medium text-brand-700 hover:underline">{{ $trip->reference }}</a>
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-2 text-gray-800">
+                                            {{ $trip->driver->user->name }}</td>
+                                        <td class="whitespace-nowrap px-4 py-2 font-mono text-gray-700">
+                                            {{ $trip->truck->plate_no }}</td>
+                                        <td class="max-w-[18rem] truncate px-4 py-2 text-gray-500"
+                                            title="{{ $trip->origin_address }} → {{ $trip->destination_address }}">
+                                            {{ $trip->origin_address }} &rarr; {{ $trip->destination_address }}</td>
+                                        <td class="whitespace-nowrap px-4 py-2"><x-status-pill :status="$trip->status" /></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="mt-3 divide-y divide-gray-100 text-sm">
-                        @forelse ($today as $trip)
-                            <a href="{{ route('schedules.show', $trip) }}"
-                                class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50/60">
-                                <div>
-                                    <div class="font-medium text-[#0E2F30]">
-                                        {{ $trip->departure_at->format('g:i A') }} &middot; {{ $trip->reference }}
-                                        &middot; {{ $trip->driver->user->name }}
-                                    </div>
-                                    <div class="text-gray-500">{{ $trip->origin_address }} &rarr;
-                                        {{ $trip->destination_address }}</div>
-                                </div>
-                                <x-status-pill :status="$trip->status" />
-                            </a>
-                        @empty
-                            <x-empty-state title="No trips today" message="Assign a trip to get the day started."
-                                action-label="Assign trip" :action-href="route('schedules.create')" />
-                        @endforelse
-                    </div>
-                </x-card>
+                @endif
+            </section>
 
-                <x-card>
-                    <h2 class="px-6 pt-6 text-lg font-semibold text-[#0E2F30]">Licenses to renew</h2>
-                    <div class="mt-3 divide-y divide-gray-100 text-sm">
-                        @forelse ($expiring as $d)
-                            <a href="{{ route('drivers.show', $d) }}" class="block px-6 py-4 hover:bg-gray-50/60">
-                                <div class="font-medium text-[#0E2F30]">{{ $d->user->name }}</div>
-                                <div class="text-gray-500">
-                                    Expires {{ $d->license_expiry->format('M d, Y') }}
-                                    <span
-                                        class="ml-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase text-white {{ $d->license_alert === 'expired' ? 'bg-red-600' : 'bg-amber-500' }}">{{ $d->license_alert === 'expired' ? 'Expired' : 'Expiring' }}</span>
-                                </div>
-                            </a>
-                        @empty
-                            <p class="px-6 py-6 text-gray-500">No licenses expire in the next 30 days.</p>
-                        @endforelse
-                    </div>
-                </x-card>
-            </div>
+            {{-- Licenses to renew --}}
+            <section class="rounded-md border border-gray-200 bg-white">
+                <div class="border-b border-gray-200 px-4 py-2.5">
+                    <h2 class="text-sm font-semibold text-[#0E2F30]">Licenses to renew</h2>
+                </div>
+                <div class="divide-y divide-gray-100 text-xs">
+                    @forelse ($expiring as $d)
+                        <a href="{{ route('drivers.show', $d) }}"
+                            class="flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-gray-50">
+                            <div class="min-w-0">
+                                <div class="truncate font-medium text-gray-800">{{ $d->user->name }}</div>
+                                <div class="text-gray-500">Expires {{ $d->license_expiry->format('M d, Y') }}</div>
+                            </div>
+                            <span
+                                class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase {{ $d->license_alert === 'expired' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700' }}">{{ $d->license_alert === 'expired' ? 'Expired' : 'Expiring' }}</span>
+                        </a>
+                    @empty
+                        <p class="px-4 py-6 text-gray-500">No licenses expire in the next 30 days.</p>
+                    @endforelse
+                </div>
+            </section>
         </div>
     </div>
 
@@ -283,9 +309,8 @@
                     });
 
                     note.textContent = data.trips.length ?
-                        data.trips.length + (data.trips.length === 1 ? ' trip' : ' trips') +
-                        ' on the road \u00b7 live positions' :
-                        'No driver is on the road right now';
+                        data.trips.length + (data.trips.length === 1 ? ' trip' : ' trips') + ' on the road' :
+                        'No trucks on the road right now';
 
                     if (bounds.length && !fitted) {
                         map.fitBounds(bounds, {
