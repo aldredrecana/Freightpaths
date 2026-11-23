@@ -58,16 +58,16 @@ export default function TabsLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: "Profile",
+            tabBarIcon: ({ focused }) => (
+              <TabIcon name="person-circle-outline" focused={focused} />
+            ),
+          }}
+        />
       </Tabs>
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="person-circle-outline" focused={focused} />
-          ),
-        }}
-      />
     </TripsProvider>
   );
 }
