@@ -53,12 +53,32 @@ export function routeSummary(r) {
     const h = Math.floor(r.minutes / 60);
     const m = r.minutes % 60;
     const time = h ? h + " h " + m + " min" : m + " min";
-    return "About " + r.km + " km \u00b7 " + time + " by road";
+    return "About " + r.km + " km · " + time + " by road";
 }
 
 // The road line: a white edge with the blue route on top.
-function roadLine(points, tooltip) {
+// A pin is often off the road (inside a yard or warehouse). The route starts at the nearest
+// road, so a small dotted line joins each pin to where the road route starts or ends.
+function roadLine(points, tooltip, from, to) {
     const group = L.layerGroup();
+    const first = points[0];
+    const last = points[points.length - 1];
+    [
+        [from, first],
+        [last, to],
+    ].forEach(([a, b]) => {
+        if (a && b && L.latLng(a).distanceTo(L.latLng(b)) > 15) {
+            L.polyline([a, b], {
+                color: ROUTE_COLOR,
+                weight: 3,
+                opacity: 0.8,
+                dashArray: "2 7",
+                lineCap: "round",
+            })
+                .bindTooltip("From the pin to the nearest road")
+                .addTo(group);
+        }
+    });
     L.polyline(points, {
         color: "#fff",
         weight: 8,
@@ -112,6 +132,8 @@ export function drawPlannedRoute(layer, plan) {
             roadLine(
                 cached.points,
                 "Planned route. " + routeSummary(cached),
+                plan.origin,
+                plan.destination,
             ).addTo(layer);
         } else {
             const straight = straightLine(plan.origin, plan.destination).addTo(
@@ -123,6 +145,8 @@ export function drawPlannedRoute(layer, plan) {
                     roadLine(
                         r.points,
                         "Planned route. " + routeSummary(r),
+                        plan.origin,
+                        plan.destination,
                     ).addTo(layer);
                 }
             });
@@ -148,28 +172,35 @@ export function drawPlannedRoute(layer, plan) {
 // - Clicking the map or dragging a pin fills an empty address box automatically.
 // - Each pin can be removed; the planned road route is shown when both pins are set.
 export function routePicker(config) {
+    // The map, pins and line live here, NOT in Alpine's data: Alpine would wrap them in
+    // reactive proxies, which breaks Leaflet's zoom animation (pins vanish or lag).
+    let map = null;
+    const markers = {};
+    let line = null;
+    let routeFor = ""; // which pin positions the line on the map belongs to
+
+    const plain = (p) => (p ? [Number(p[0]), Number(p[1])] : null);
+    const keyOf = (a, b) => (a && b ? a.join(",") + ";" + b.join(",") : "");
+
     return {
         message: "",
         summary: "",
-        origin: config.origin, // [lat, lng] or null
-        destination: config.destination,
-        map: null,
-        markers: {},
-        line: null,
+        origin: plain(config.origin), // [lat, lng] or null
+        destination: plain(config.destination),
         // Remember what we filled in ourselves, so we never overwrite what the user typed.
         autoAddress: { origin: null, destination: null },
         // True when the pin came from the address text (so a new address can move it).
         pinFromAddress: { origin: false, destination: false },
 
         init() {
-            this.map = L.map(this.$refs.map).setView([14.17, 121.24], 9); // Laguna area
+            map = L.map(this.$refs.map).setView([14.17, 121.24], 9); // Laguna area
             L.tileLayer(config.tileUrl, {
                 maxZoom: 19,
                 attribution: config.attribution,
-            }).addTo(this.map);
+            }).addTo(map);
 
             // Clicking the map places the pin that is still missing (pickup first).
-            this.map.on("click", (e) => {
+            map.on("click", (e) => {
                 const kind = !this.origin
                     ? "origin"
                     : !this.destination
@@ -218,9 +249,10 @@ export function routePicker(config) {
         },
 
         place(kind, point, fit = true) {
-            this[kind] = point;
-            if (!this.markers[kind]) {
-                this.markers[kind] = L.marker(point, {
+            const p = plain(point);
+            this[kind] = p;
+            if (!markers[kind]) {
+                markers[kind] = L.marker(p, {
                     icon: pinIcon(kind),
                     draggable: true,
                 })
@@ -229,46 +261,51 @@ export function routePicker(config) {
                             ? "Pickup (drag to adjust)"
                             : "Drop-off (drag to adjust)",
                     )
-                    .addTo(this.map);
-                this.markers[kind].on("dragend", (e) => {
-                    const p = e.target.getLatLng();
-                    this[kind] = [p.lat, p.lng];
+                    .addTo(map);
+                markers[kind].on("dragend", (e) => {
+                    const ll = e.target.getLatLng();
+                    this[kind] = [ll.lat, ll.lng];
                     this.pinFromAddress[kind] = false;
                     this.fillAddress(kind);
                     this.updateRoute();
                 });
             } else {
-                this.markers[kind].setLatLng(point);
+                markers[kind].setLatLng(p);
             }
             if (fit) this.fit();
             this.updateRoute();
         },
 
         fit() {
-            const pts = [this.origin, this.destination].filter(Boolean);
-            if (pts.length === 1) this.map.setView(pts[0], 15);
-            if (pts.length === 2)
-                this.map.fitBounds(pts, { padding: [40, 40] });
+            const pts = [plain(this.origin), plain(this.destination)].filter(
+                Boolean,
+            );
+            if (pts.length === 1) map.setView(pts[0], 15);
+            if (pts.length === 2) map.fitBounds(pts, { padding: [40, 40] });
         },
 
         // The road route between the two pins.
         async updateRoute() {
-            if (this.line) {
-                this.map.removeLayer(this.line);
-                this.line = null;
+            const a = plain(this.origin);
+            const b = plain(this.destination);
+            const key = keyOf(a, b);
+            if (key === routeFor && line) return; // already drawn for these pins
+            routeFor = key;
+
+            if (line) {
+                map.removeLayer(line);
+                line = null;
             }
             this.summary = "";
-            if (!this.origin || !this.destination) return;
+            if (!a || !b) return;
 
-            const a = this.origin;
-            const b = this.destination;
-            this.line = straightLine(a, b).addTo(this.map);
+            line = straightLine(a, b).addTo(map);
 
             const r = await fetchRoad(a, b);
-            if (a !== this.origin || b !== this.destination) return; // pins moved meanwhile
+            if (routeFor !== key) return; // pins moved meanwhile
             if (r && r.on_roads) {
-                this.map.removeLayer(this.line);
-                this.line = roadLine(r.points, "Planned route").addTo(this.map);
+                map.removeLayer(line);
+                line = roadLine(r.points, "Planned route", a, b).addTo(map);
                 this.summary = routeSummary(r);
             }
         },
@@ -281,7 +318,8 @@ export function routePicker(config) {
             const current = field.value.trim();
             if (current !== "" && current !== this.autoAddress[kind]) return; // keep what the user typed
 
-            const point = this[kind];
+            const point = plain(this[kind]);
+            const asked = point.join(",");
             this.message = "Looking up the " + this.label(kind) + " address...";
             try {
                 const data = await getJson(
@@ -289,7 +327,8 @@ export function routePicker(config) {
                         "?" +
                         new URLSearchParams({ lat: point[0], lng: point[1] }),
                 );
-                if (this[kind] !== point) return; // pin moved meanwhile
+                if (!this[kind] || plain(this[kind]).join(",") !== asked)
+                    return; // pin moved meanwhile
                 if (data.found) {
                     field.value = data.label;
                     this.autoAddress[kind] = data.label;
@@ -361,9 +400,9 @@ export function routePicker(config) {
 
         // Removes a wrong pin. An address we filled in from that pin is removed too.
         clear(kind) {
-            if (this.markers[kind]) {
-                this.map.removeLayer(this.markers[kind]);
-                delete this.markers[kind];
+            if (markers[kind]) {
+                map.removeLayer(markers[kind]);
+                delete markers[kind];
             }
             this[kind] = null;
             this.pinFromAddress[kind] = false;
@@ -386,7 +425,7 @@ export function routePicker(config) {
 
         // For the hidden inputs: "" when there is no pin, so the server saves nothing.
         value(kind, i) {
-            return this[kind] ? this[kind][i].toFixed(7) : "";
+            return this[kind] ? Number(this[kind][i]).toFixed(7) : "";
         },
     };
 }

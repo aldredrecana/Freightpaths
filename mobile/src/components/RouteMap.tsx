@@ -53,6 +53,13 @@ const HTML = `<!DOCTYPE html>
       if (s.plan.line && s.plan.line.length > 1) {
         L.polyline(s.plan.line, { color: '#ffffff', weight: 8, opacity: 0.9, lineJoin: 'round' }).addTo(layer);
         L.polyline(s.plan.line, { color: '#1D4ED8', weight: 5, opacity: 0.85, lineJoin: 'round' }).addTo(layer);
+                // Dotted joins from each pin to where the road route starts / ends (pins are often off the road).
+        var ends = [[s.plan.origin, s.plan.line[0]], [s.plan.line[s.plan.line.length - 1], s.plan.destination]];
+        ends.forEach(function (e) {
+          if (e[0] && e[1] && L.latLng(e[0]).distanceTo(L.latLng(e[1])) > 15) {
+            L.polyline(e, { color: '#1D4ED8', weight: 3, opacity: 0.8, dashArray: '2 7', lineCap: 'round' }).addTo(layer);
+          }
+        });
       } else if (s.plan.origin && s.plan.destination) {
         L.polyline([s.plan.origin, s.plan.destination], { color: '#6b7280', weight: 3, dashArray: '8 8' }).addTo(layer);
       }
