@@ -15,6 +15,10 @@ export type User = {
   email: string;
   driver_id: number;
   driver_status: string;
+  contact_no: string;
+  address: string;
+  license_no: string;
+  license_expiry: string | null; // "2027-05-31"
 };
 
 type AuthState = {
@@ -23,6 +27,7 @@ type AuthState = {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  setUser: (user: User) => void; // after the Profile tab saves changes
 };
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -78,7 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{ user, token, loading, signIn, signOut, setUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
