@@ -10,6 +10,8 @@ use App\Models\Schedule;
 class TripTracker
 {
     private const POINT_COLUMNS = ['latitude', 'longitude', 'accuracy', 'recorded_at'];
+    
+    public function __construct(private RoadSnapper $snapper) {}
 
     // How many of the newest points we look at to find the direction of travel.
     private const HEADING_POINTS = 8;
@@ -45,7 +47,8 @@ class TripTracker
         $rests = $schedule->restPeriods;
 
         return $this->status($schedule, $pings->last(), $rests->last(), $this->heading($pings->slice(-self::HEADING_POINTS)->values())) + [
-            'path' => $pings->map(fn ($p) => [$p->latitude, $p->longitude])->values(),
+            'path' => $pings->map(fn ($p) => [$p->latitude, $p->longitude])->values(), // raw GPS points
+            'segments' => $this->snapper->segments($pings), // the same route drawn on the roads
             'rests' => $rests->map(fn ($r) => [
                 'lat' => $r->latitude,
                 'lng' => $r->longitude,
@@ -93,6 +96,14 @@ class TripTracker
         return 2 * 6371000 * asin(min(1, sqrt($h)));
     }
 
+        // The truck marker sits on the nearest road when one is a few meters away.
+    private function lastPoint(LocationPing $last): array
+    {
+        [$lat, $lng] = $this->snapper->nearest($last->latitude, $last->longitude, $last->accuracy);
+
+        return ['lat' => $lat, 'lng' => $lng];
+    }
+
     private function status(Schedule $schedule, ?LocationPing $last, ?RestPeriod $lastRest, ?float $heading = null): array
     {
         $secondsAgo = $last ? max(0, now()->timestamp - $last->recorded_at->timestamp) : null;
@@ -130,11 +141,9 @@ class TripTracker
             'state' => $state,
             'label' => $label,
             'message' => $message,
-            'last' => $last ? [
-                'lat' => $last->latitude,
-                'lng' => $last->longitude,
-                'accuracy' => $last->accuracy,
-                'heading' => $heading,
+            'last' => $last ? $this->lastPoint($last) + [
+            'accuracy' => $last->accuracy,
+            'heading' => $heading,
             ] : null,
         ];
     }

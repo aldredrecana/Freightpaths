@@ -48,220 +48,241 @@
 
     <script type="module">
         (function() {
-            const dataUrl = "{{ route('map.data') }}";
+                const dataUrl = "{{ route('map.data') }}";
 
-            const stateColor = {
-                resting: '#2563eb',
-                tracking: '#0B6E6E',
-                offline: '#dc2626',
-                waiting: '#6b7280'
-            };
-            const pill = {
-                resting: 'bg-blue-50 text-blue-700',
-                tracking: 'bg-brand-50 text-brand-700',
-                offline: 'bg-red-100 text-red-800',
-                waiting: 'bg-gray-100 text-gray-600',
-            };
+                const stateColor = {
+                    resting: '#2563eb',
+                    tracking: '#0B6E6E',
+                    offline: '#dc2626',
+                    waiting: '#6b7280'
+                };
+                const pill = {
+                    resting: 'bg-blue-50 text-blue-700',
+                    tracking: 'bg-brand-50 text-brand-700',
+                    offline: 'bg-red-100 text-red-800',
+                    waiting: 'bg-gray-100 text-gray-600',
+                };
 
-            // A truck seen from above, nose pointing up (north). It is turned to face the direction of travel.
-            function truckSvg(color) {
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 46" width="28" height="46">' +
-                    '<rect x="3" y="15" width="22" height="29" rx="3" fill="' + color +
-                    '" stroke="#fff" stroke-width="2"/>' +
-                    '<rect x="11" y="19" width="6" height="21" rx="2" fill="#fff" opacity=".25"/>' +
-                    '<rect x="5" y="2" width="18" height="12" rx="5" fill="' + color +
-                    '" stroke="#fff" stroke-width="2"/>' +
-                    '<rect x="8" y="4.5" width="12" height="4" rx="1.5" fill="#fff" opacity=".9"/>' +
-                    '</svg>';
-            }
-
-            const map = L.map('map-canvas', {
-                zoomControl: false
-            }).setView([14.17, 121.24], 9);
-            L.control.zoom({
-                position: 'topright'
-            }).addTo(map);
-            L.tileLayer(@json(config('freightpath.map_tile_url')), {
-                maxZoom: 19,
-                attribution: @json(config('freightpath.map_attribution')),
-            }).addTo(map);
-            const layer = L.layerGroup().addTo(map);
-
-            let trips = [];
-            let selectedId = null; // null = "View all"
-            let routeData = null;
-            let fitKey = null; // what the map was last zoomed to
-
-            // Small helpers: text is always set with textContent, never as HTML.
-            function el(tag, className, text) {
-                const node = document.createElement(tag);
-                if (className) node.className = className;
-                if (text !== undefined) node.textContent = text;
-                return node;
-            }
-
-            function initials(name) {
-                return name.split(/\s+/).filter(Boolean).slice(0, 2).map(function(p) {
-                    return p[0].toUpperCase();
-                }).join('');
-            }
-
-            // heading = direction of travel in degrees (0 = north, 90 = east); null = not moving.
-            function truckIcon(color, selected, heading) {
-                const turn = heading === null || heading === undefined ? 0 : heading;
-                const size = selected ? 1.25 : 1;
-                return L.divIcon({
-                    className: '',
-                    html: '<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;' +
-                        'transform:rotate(' + turn + 'deg) scale(' + size + ');transition:transform .6s;' +
-                        'filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));">' + truckSvg(color) + '</div>',
-                    iconSize: [48, 48],
-                    iconAnchor: [24, 24], // the middle of the truck sits on the GPS point
-                });
-            }
-
-            async function getJson(url) {
-                const res = await fetch(url, {
-                    headers: {
-                        Accept: 'application/json'
-                    },
-                    credentials: 'same-origin'
-                });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.json();
-            }
-
-            async function refresh() {
-                try {
-                    trips = (await getJson(dataUrl)).trips;
-
-                    if (selectedId !== null && !trips.some(function(t) {
-                            return t.id === selectedId;
-                        })) {
-                        selectedId = null; // that trip is no longer on the road
-                        routeData = null;
-                    }
-                    if (selectedId !== null) {
-                        const t = trips.find(function(x) {
-                            return x.id === selectedId;
-                        });
-                        routeData = await getJson(t.tracking_url);
-                    }
-                } catch (e) {
-                    document.getElementById('map-count').textContent = 'Could not load. Retrying...';
-                    return;
-                }
-                render();
-            }
-
-            function select(id) {
-                selectedId = id;
-                routeData = null;
-                refresh();
-            }
-
-            function showAll() {
-                selectedId = null;
-                routeData = null;
-                fitKey = null;
-                render();
-            }
-
-            function renderList() {
-                const list = document.getElementById('map-list');
-                list.replaceChildren();
-
-                document.getElementById('map-count').textContent = trips.length ?
-                    trips.length + (trips.length === 1 ? ' trip' : ' trips') + ' on the road' :
-                    'Nothing on the road right now';
-
-                if (!trips.length) {
-                    list.appendChild(el('p', 'p-6 text-sm text-gray-500',
-                        'Trips appear here when a driver starts one.'));
-                    return;
+                // A truck seen from above, nose pointing up (north). It is turned to face the direction of travel.
+                function truckSvg(color) {
+                    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 46" width="28" height="46">' +
+                        '<rect x="3" y="15" width="22" height="29" rx="3" fill="' + color +
+                        '" stroke="#fff" stroke-width="2"/>' +
+                        '<rect x="11" y="19" width="6" height="21" rx="2" fill="#fff" opacity=".25"/>' +
+                        '<rect x="5" y="2" width="18" height="12" rx="5" fill="' + color +
+                        '" stroke="#fff" stroke-width="2"/>' +
+                        '<rect x="8" y="4.5" width="12" height="4" rx="1.5" fill="#fff" opacity=".9"/>' +
+                        '</svg>';
                 }
 
-                trips.forEach(function(t) {
-                    const row = el('button', 'block w-full px-6 py-4 text-left hover:bg-gray-50' + (t.id ===
-                        selectedId ? ' bg-brand-50' : ''));
-                    row.type = 'button';
+                const map = L.map('map-canvas', {
+                    zoomControl: false
+                }).setView([14.17, 121.24], 9);
+                L.control.zoom({
+                    position: 'topright'
+                }).addTo(map);
+                L.tileLayer(@json(config('freightpath.map_tile_url')), {
+                    maxZoom: 19,
+                    attribution: @json(config('freightpath.map_attribution')),
+                }).addTo(map);
+                const layer = L.layerGroup().addTo(map);
 
-                    const top = el('div', 'flex items-center gap-3');
-                    top.appendChild(el('span',
-                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700',
-                        initials(t.driver)));
-                    const who = el('div', 'min-w-0');
-                    who.appendChild(el('div', 'truncate font-semibold text-[#0E2F30]', t.truck + ' \u00b7 ' + t
-                        .driver));
-                    who.appendChild(el('div', 'text-xs text-gray-500', t.reference));
-                    top.appendChild(who);
-                    row.appendChild(top);
+                let trips = [];
+                let selectedId = null; // null = "View all"
+                let routeData = null;
+                let fitKey = null; // what the map was last zoomed to
 
-                    row.appendChild(el('div', 'mt-2 truncate text-sm text-gray-600', t.origin + ' \u2192 ' + t
-                        .destination));
-                    row.appendChild(el('span', 'mt-2 inline-block rounded-md px-2.5 py-1 text-xs ' + (pill[t
-                        .state] || pill.waiting), t.label));
+                // Small helpers: text is always set with textContent, never as HTML.
+                function el(tag, className, text) {
+                    const node = document.createElement(tag);
+                    if (className) node.className = className;
+                    if (text !== undefined) node.textContent = text;
+                    return node;
+                }
 
-                    row.addEventListener('click', function() {
-                        select(t.id);
+                function initials(name) {
+                    return name.split(/\s+/).filter(Boolean).slice(0, 2).map(function(p) {
+                        return p[0].toUpperCase();
+                    }).join('');
+                }
+
+                // heading = direction of travel in degrees (0 = north, 90 = east); null = not moving.
+                function truckIcon(color, selected, heading) {
+                    const turn = heading === null || heading === undefined ? 0 : heading;
+                    const size = selected ? 1.25 : 1;
+                    return L.divIcon({
+                        className: '',
+                        html: '<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;' +
+                            'transform:rotate(' + turn + 'deg) scale(' + size + ');transition:transform .6s;' +
+                            'filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));">' + truckSvg(color) + '</div>',
+                        iconSize: [48, 48],
+                        iconAnchor: [24, 24], // the middle of the truck sits on the GPS point
                     });
-                    list.appendChild(row);
-                });
-            }
+                }
 
-            function renderMap() {
-                layer.clearLayers();
-                const bounds = [];
+                async function getJson(url) {
+                    const res = await fetch(url, {
+                        headers: {
+                            Accept: 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                }
 
-                if (selectedId === null) {
+                async function refresh() {
+                    try {
+                        trips = (await getJson(dataUrl)).trips;
+
+                        if (selectedId !== null && !trips.some(function(t) {
+                                return t.id === selectedId;
+                            })) {
+                            selectedId = null; // that trip is no longer on the road
+                            routeData = null;
+                        }
+                        if (selectedId !== null) {
+                            const t = trips.find(function(x) {
+                                return x.id === selectedId;
+                            });
+                            routeData = await getJson(t.tracking_url);
+                        }
+                    } catch (e) {
+                        document.getElementById('map-count').textContent = 'Could not load. Retrying...';
+                        return;
+                    }
+                    render();
+                }
+
+                function select(id) {
+                    selectedId = id;
+                    routeData = null;
+                    refresh();
+                }
+
+                function showAll() {
+                    selectedId = null;
+                    routeData = null;
+                    fitKey = null;
+                    render();
+                }
+
+                function renderList() {
+                    const list = document.getElementById('map-list');
+                    list.replaceChildren();
+
+                    document.getElementById('map-count').textContent = trips.length ?
+                        trips.length + (trips.length === 1 ? ' trip' : ' trips') + ' on the road' :
+                        'Nothing on the road right now';
+
+                    if (!trips.length) {
+                        list.appendChild(el('p', 'p-6 text-sm text-gray-500',
+                            'Trips appear here when a driver starts one.'));
+                        return;
+                    }
+
                     trips.forEach(function(t) {
-                        if (!t.last) return;
-                        const ll = [t.last.lat, t.last.lng];
-                        const marker = L.marker(ll, {
-                            icon: truckIcon(stateColor[t.state] || stateColor.waiting, false, t.last
-                                .heading)
-                        }).addTo(layer);
-                        marker.bindTooltip(el('span', '', t.driver), {
-                            direction: 'top',
-                            offset: [0, -22]
-                        });
-                        marker.on('click', function() {
+                        const row = el('button', 'block w-full px-6 py-4 text-left hover:bg-gray-50' + (t.id ===
+                            selectedId ? ' bg-brand-50' : ''));
+                        row.type = 'button';
+
+                        const top = el('div', 'flex items-center gap-3');
+                        top.appendChild(el('span',
+                            'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700',
+                            initials(t.driver)));
+                        const who = el('div', 'min-w-0');
+                        who.appendChild(el('div', 'truncate font-semibold text-[#0E2F30]', t.truck + ' \u00b7 ' + t
+                            .driver));
+                        who.appendChild(el('div', 'text-xs text-gray-500', t.reference));
+                        top.appendChild(who);
+                        row.appendChild(top);
+
+                        row.appendChild(el('div', 'mt-2 truncate text-sm text-gray-600', t.origin + ' \u2192 ' + t
+                            .destination));
+                        row.appendChild(el('span', 'mt-2 inline-block rounded-md px-2.5 py-1 text-xs ' + (pill[t
+                            .state] || pill.waiting), t.label));
+
+                        row.addEventListener('click', function() {
                             select(t.id);
                         });
-                        bounds.push(ll);
+                        list.appendChild(row);
                     });
-                } else if (routeData) {
-                    const d = routeData;
+                }
 
-                    if (d.path.length > 1) {
-                        // Drawn like a highlighted road: a wide white edge with the teal route on top.
-                        L.polyline(d.path, {
-                            color: '#ffffff',
-                            weight: 10,
-                            opacity: 0.95,
-                            lineCap: 'round',
-                            lineJoin: 'round'
-                        }).addTo(layer);
-                        L.polyline(d.path, {
-                            color: '#0B6E6E',
-                            weight: 6,
-                            opacity: 1,
-                            lineCap: 'round',
-                            lineJoin: 'round'
-                        }).addTo(layer);
-                    }
-                    d.path.forEach(function(p) {
-                        bounds.push(p);
-                    });
+                function renderMap() {
+                    layer.clearLayers();
+                    const bounds = [];
 
-                    if (d.path.length) {
-                        L.circleMarker(d.path[0], {
-                                radius: 7,
-                                color: '#047857',
-                                fillColor: '#10b981',
-                                fillOpacity: 1
-                            })
-                            .bindTooltip('Start of tracking').addTo(layer);
+                    if (selectedId === null) {
+                        trips.forEach(function(t) {
+                            if (!t.last) return;
+                            const ll = [t.last.lat, t.last.lng];
+                            const marker = L.marker(ll, {
+                                icon: truckIcon(stateColor[t.state] || stateColor.waiting, false, t.last
+                                    .heading)
+                            }).addTo(layer);
+                            marker.bindTooltip(el('span', '', t.driver), {
+                                direction: 'top',
+                                offset: [0, -22]
+                            });
+                            marker.on('click', function() {
+                                select(t.id);
+                            });
+                            bounds.push(ll);
+                        });
+                    } else if (routeData) {
+                        const d = routeData;
+
+                        // Driven parts: drawn like a highlighted road (white edge, teal line on top).
+                        // Lost-signal parts: a dashed grey line along the most likely road.
+                        const segments = d.segments || [{
+                            type: 'driven',
+                            points: d.path
+                        }];
+                        segments.forEach(function(seg) {
+                            if (seg.points.length < 2) return;
+                            if (seg.type === 'gap') {
+                                L.polyline(seg.points, {
+                                    color: '#6B7280',
+                                    weight: 4,
+                                    opacity: 0.9,
+                                    dashArray: '6 10',
+                                    lineCap: 'round'
+                                }).bindTooltip('No signal here (likely route)').addTo(layer);
+                                return;
+                            }
+                            L.polyline(seg.points, {
+                                color: '#ffffff',
+                                weight: 10,
+                                opacity: 0.95,
+                                lineCap: 'round',
+                                lineJoin: 'round'
+                            }).addTo(layer);
+                            L.polyline(seg.points, {
+                                color: '#0B6E6E',
+                                weight: 6,
+                                opacity: 1,
+                                lineCap: 'round',
+                                lineJoin: 'round'
+                            }).addTo(layer);
+                        });
+                        segments.forEach(function(seg) {
+                            seg.points.forEach(function(p) {
+                                bounds.push(p);
+                            });
+                        });
+
+                        const start = segments.length && segments[0].points.length ? segments[0].points[0] : null;
+                        if (start) {
+                            L.circleMarker(start, {
+                                    radius: 7,
+                                    color: '#047857',
+                                    fillColor: '#10b981',
+                                    fillOpacity: 1
+                                })
+                                .bindTooltip('Start of tracking').addTo(layer);
+                        }
+
                     }
                     d.rests.forEach(function(r, i) {
                         L.circleMarker([r.lat, r.lng], {
@@ -340,11 +361,10 @@
                 renderInfo();
             }
 
-            document.getElementById('map-all').addEventListener('click', showAll);
-            document.getElementById('map-refresh').addEventListener('click', refresh);
+            document.getElementById('map-all').addEventListener('click', showAll); document.getElementById('map-refresh')
+            .addEventListener('click', refresh);
 
-            refresh();
-            setInterval(refresh, 15000);
+            refresh(); setInterval(refresh, 15000);
         })();
     </script>
 </x-app-layout>

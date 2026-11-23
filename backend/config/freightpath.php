@@ -36,5 +36,14 @@ return [
     
     // Address search for the "Find on map" button (free OpenStreetMap Nominatim, light use only).
     'geocode_url' => env('FREIGHTPATH_GEOCODE_URL', 'https://nominatim.openstreetmap.org/search'),
-    'geocode_country' => env('FREIGHTPATH_GEOCODE_COUNTRY', 'ph'), // search only inside the Philippines
+        'geocode_country' => env('FREIGHTPATH_GEOCODE_COUNTRY', 'ph'), // search only inside the Philippines
+
+    // Drawing the driven route on the roads ("map matching"). GPS points are a few meters off,
+    // so the server asks OSRM (free OpenStreetMap routing) which roads the points belong to.
+    // If OSRM cannot be reached, the map simply draws the GPS points as they are.
+    'snap_to_roads' => (bool) env('FREIGHTPATH_SNAP_TO_ROADS', true),
+    'osrm_url' => env('FREIGHTPATH_OSRM_URL', 'https://router.project-osrm.org'),
+    'path_max_accuracy_m' => (int) env('FREIGHTPATH_PATH_MAX_ACCURACY_M', 50), // rougher points are left out of the line
+    'path_gap_seconds' => (int) env('FREIGHTPATH_PATH_GAP_SECONDS', 120), // silence longer than this...
+    'path_gap_meters' => (int) env('FREIGHTPATH_PATH_GAP_METERS', 300), // ...over this distance = lost signal
 ];

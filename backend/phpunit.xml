@@ -28,6 +28,7 @@
         <env name="APP_TIMEZONE" value="Asia/Manila"/>
         <env name="FREIGHTPATH_PUBLIC_REGISTRATION" value="true"/>
         <env name="FREIGHTPATH_LATE_WINDOW_HOURS" value="3"/>
+        <env name="FREIGHTPATH_SNAP_TO_ROADS" value="false"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

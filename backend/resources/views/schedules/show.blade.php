@@ -233,16 +233,28 @@
                             const bounds = [];
                             bounds.push(...window.drawPlannedRoute(layer, plan));
 
-                            if (d.path.length > 1) {
-                                L.polyline(d.path, {
-                                    color: '#2563eb',
-                                    weight: 4,
-                                    opacity: 0.8
-                                }).addTo(layer);
-                            }
-                            if (d.path.length) {
-                                bounds.push(d.path[0]);
-                                L.circleMarker(d.path[0], {
+                            const segments = d.segments || [{
+                                type: 'driven',
+                                points: d.path
+                            }];
+                            segments.forEach(function(seg) {
+                                if (seg.points.length < 2) return;
+                                L.polyline(seg.points, seg.type === 'gap' ? {
+                                        color: '#6B7280',
+                                        weight: 4,
+                                        opacity: 0.9,
+                                        dashArray: '6 10'
+                                    } : {
+                                        color: '#0B6E6E',
+                                        weight: 5,
+                                        opacity: 0.9
+                                    }).bindTooltip(seg.type === 'gap' ? 'No signal here (likely route)' : 'Driven route')
+                                    .addTo(layer);
+                            });
+                            const start = segments.length && segments[0].points.length ? segments[0].points[0] : null;
+                            if (start) {
+                                bounds.push(start);
+                                L.circleMarker(start, {
                                         radius: 7,
                                         color: '#047857',
                                         fillColor: '#10b981',
@@ -250,7 +262,6 @@
                                     })
                                     .bindTooltip('Start of tracking').addTo(layer);
                             }
-
                             d.rests.forEach(function(r, i) {
                                 bounds.push([r.lat, r.lng]);
                                 L.circleMarker([r.lat, r.lng], {
