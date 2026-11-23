@@ -5,6 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @auth
+        {{-- Used by the trip maps (resources/js/route-pins.js). --}}
+        <meta name="route-preview-url" content="{{ route('route.preview') }}">
+        <meta name="reverse-geocode-url" content="{{ route('geocode.reverse') }}">
+    @endauth
 
     <title>{{ config('app.name', 'Laravel') }}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">

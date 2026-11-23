@@ -61,6 +61,62 @@ class GeocodeController extends Controller
         return response()->json($result);
     }
 
+        // Map point to address: when a pin is placed and the address box is still empty.
+    public function reverse(Request $request)
+    {
+        $data = $request->validate([
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lng' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        // Points about 1 m apart share the same answer.
+        $lat = round((float) $data['lat'], 5);
+        $lng = round((float) $data['lng'], 5);
+        $key = "geocode:reverse:{$lat},{$lng}";
+
+        $label = Cache::get($key);
+
+        if ($label === null) {
+            try {
+                $response = Http::withHeaders([
+                    'User-Agent' => config('app.name').' trip planner ('.config('app.url').')',
+                ])
+                    ->timeout(8)
+                    ->get(config('freightpath.reverse_geocode_url'), [
+                        'lat' => $lat,
+                        'lon' => $lng,
+                        'format' => 'jsonv2',
+                        'zoom' => 18, // street / building level
+                    ]);
+            } catch (\Throwable $e) {
+                $response = null;
+            }
+
+            if (! $response || ! $response->ok()) {
+                return response()->json(['found' => false], 503);
+            }
+
+            $label = (string) ($response->json('display_name') ?? '');
+            Cache::put($key, $label, now()->addDay());
+        }
+
+        return response()->json($label === ''
+            ? ['found' => false]
+            : ['found' => true, 'label' => $this->shorten($label)]);
+    }
+
+    // "Building, Street, Barangay, Town, Province, Region, 4000, Philippines"
+    // -> without the region, postal code and country (they are long and not needed on a trip).
+    private function shorten(string $label): string
+    {
+        $parts = array_map('trim', explode(',', $label));
+        $parts = array_filter($parts, fn ($p) => $p !== 'Philippines'
+            && ! preg_match('/^\d{4}$/', $p)
+            && ! preg_match('/^(Calabarzon|Mimaropa|Metro Manila|National Capital Region|Region [IVX]+|.*Region)$/i', $p));
+
+        return implode(', ', $parts);
+    }
+
     // The address as typed, then shorter versions the free search understands better:
     // "Rizal Park (Luneta), Roxas Boulevard, Ermita, Manila, 1000"
     //   -> "Rizal Park, Roxas Boulevard, Ermita, Manila"   (no brackets, no postal code)

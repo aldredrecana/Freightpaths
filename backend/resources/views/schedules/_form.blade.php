@@ -27,31 +27,41 @@
 
     {{-- Map pins for pickup (A) and drop-off (B). Optional. --}}
     <div class="md:col-span-2" x-data="routePicker(@js([
-        'origin' => $pin('origin'),
-        'destination' => $pin('destination'),
-        'geocodeUrl' => route('geocode'),
-        'tileUrl' => config('freightpath.map_tile_url'),
-        'attribution' => config('freightpath.map_attribution'),
-    ]))">
+    'origin' => $pin('origin'),
+    'destination' => $pin('destination'),
+    'geocodeUrl' => route('geocode'),
+    'tileUrl' => config('freightpath.map_tile_url'),
+    'attribution' => config('freightpath.map_attribution'),
+]))">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <p class="text-sm font-medium text-gray-700">Map pins <span class="font-normal text-gray-400">(optional)</span></p>
-                <p class="text-xs text-gray-500">Find each address, then drag the pin to the exact gate or warehouse.
-                    You can also click on the map.</p>
+                <p class="text-sm font-medium text-gray-700">Map pins <span
+                        class="font-normal text-gray-400">(optional)</span></p>
+                <p class="text-xs text-gray-500">Type an address and its pin appears. Or click on the map:
+                    an empty address box is filled in for you. Drag a pin to the exact gate or warehouse.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <x-btn type="button" variant="secondary" class="!px-3 !py-2" @click="find('origin')">Find pickup (A)</x-btn>
-                <x-btn type="button" variant="secondary" class="!px-3 !py-2" @click="find('destination')">Find drop-off (B)</x-btn>
+                <x-btn type="button" variant="secondary" class="!px-3 !py-2" @click="find('origin')">Find pickup
+                    (A)</x-btn>
+                <x-btn type="button" variant="secondary" class="!px-3 !py-2" @click="find('destination')">Find drop-off
+                    (B)</x-btn>
             </div>
         </div>
 
         <p x-show="message" x-text="message" class="mt-2 text-xs text-gray-600" style="display: none;"></p>
 
-        <div x-ref="map" class="mt-3 w-full rounded-lg border border-gray-200" style="height: 20rem; z-index: 0;"></div>
+        <div x-ref="map" class="mt-3 w-full rounded-lg border border-gray-200" style="height: 20rem; z-index: 0;">
+        </div>
 
-        <div class="mt-2 flex gap-4 text-xs">
-            <button type="button" x-show="origin" @click="clear('origin')" class="text-gray-500 hover:underline">Remove pickup pin</button>
-            <button type="button" x-show="destination" @click="clear('destination')" class="text-gray-500 hover:underline">Remove drop-off pin</button>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            <button type="button" x-show="origin" @click="clear('origin')" style="display: none;"
+                class="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 font-medium text-gray-700 hover:border-red-300 hover:text-red-600">
+                &times; Remove pin A (pickup)</button>
+            <button type="button" x-show="destination" @click="clear('destination')" style="display: none;"
+                class="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 font-medium text-gray-700 hover:border-red-300 hover:text-red-600">
+                &times; Remove pin B (drop-off)</button>
+            <span x-show="summary" x-text="summary" style="display: none;"
+                class="ml-auto rounded-md bg-blue-50 px-2.5 py-1.5 font-medium text-blue-700"></span>
         </div>
 
         <input type="hidden" name="origin_lat" :value="value('origin', 0)">

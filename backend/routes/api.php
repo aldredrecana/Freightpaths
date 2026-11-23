@@ -18,6 +18,7 @@ Route::middleware(['auth:sanctum', 'role:driver'])->group(function () {
     Route::get('/trips', [TripController::class, 'index']);
     Route::get('/trips/{schedule}', [TripController::class, 'show']);
     Route::get('/trips/{schedule}/track', [TripController::class, 'track']);
+    Route::get('/trips/{schedule}/route', [TripController::class, 'route']);
 
     // Same methods the website uses, so the rules stay in one place.
     Route::post('/trips/{schedule}/status', [ScheduleController::class, 'updateStatus']);

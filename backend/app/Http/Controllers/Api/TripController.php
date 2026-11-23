@@ -46,4 +46,18 @@ class TripController extends Controller
 
         return response()->json(['path' => $snapper->flatten($snapper->segments($pings))]);
     }
+
+    
+    // The road route from pickup (A) to drop-off (B), for the Route card in the app.
+    public function route(Request $request, Schedule $schedule, RoadSnapper $snapper)
+    {
+        abort_unless($schedule->driver->user_id === $request->user()->id, 403);
+
+        $plan = $schedule->routePlan();
+        if (! $plan['origin'] || ! $plan['destination']) {
+            return response()->json(['points' => [], 'km' => null, 'minutes' => null, 'on_roads' => false]);
+        }
+
+        return response()->json($snapper->roadRoute($plan['origin'], $plan['destination']));
+    }
 }

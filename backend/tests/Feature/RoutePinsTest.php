@@ -145,7 +145,7 @@ class RoutePinsTest extends TestCase
             ->get(route('schedules.create'))
             ->assertOk()
             ->assertSee('routePicker', false)
-            ->assertSee('Find pickup (A)');
+            ->assertSee("find('origin')", false);
     }
 
     public function test_the_edit_form_shows_the_saved_pins_and_can_remove_them(): void

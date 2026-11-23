@@ -36,7 +36,8 @@ return [
     
     // Address search for the "Find on map" button (free OpenStreetMap Nominatim, light use only).
     'geocode_url' => env('FREIGHTPATH_GEOCODE_URL', 'https://nominatim.openstreetmap.org/search'),
-        'geocode_country' => env('FREIGHTPATH_GEOCODE_COUNTRY', 'ph'), // search only inside the Philippines
+    'reverse_geocode_url' => env('FREIGHTPATH_REVERSE_GEOCODE_URL', 'https://nominatim.openstreetmap.org/reverse'),
+    'geocode_country' => env('FREIGHTPATH_GEOCODE_COUNTRY', 'ph'), // search only inside the Philippines
 
     // Drawing the driven route on the roads ("map matching"). GPS points are a few meters off,
     // so the server asks OSRM (free OpenStreetMap routing) which roads the points belong to.

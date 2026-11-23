@@ -159,8 +159,9 @@
             @if (!in_array($schedule->status, ['en_route', 'delivered'], true) && $schedule->hasPins())
                 <div id="route-card" class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                     <h3 class="font-semibold text-gray-800">Planned route</h3>
-                    <p class="mb-3 mt-1 text-sm text-gray-600">A = pickup, B = drop-off. GPS tracking starts when the
-                        driver starts the trip.</p>
+                    <p class="mb-3 mt-1 text-sm text-gray-600">A = pickup, B = drop-off. The blue line is the suggested
+                        road
+                        route. GPS tracking starts when the driver starts the trip.</p>
                     <div id="route-map" style="height: 18rem; z-index: 0;"
                         class="w-full rounded-lg border border-gray-200"></div>
                 </div>

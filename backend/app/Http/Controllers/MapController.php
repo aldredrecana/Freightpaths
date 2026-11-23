@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Schedule;
+use App\Services\RoadSnapper;
 use App\Services\TripTracker;
+use Illuminate\Http\Request;
 
 class MapController extends Controller
 {
@@ -32,5 +34,22 @@ class MapController extends Controller
                 'tracking_url' => route('schedules.tracking', $s),
             ] + $tracker->summary($s))->values(),
         ]);
+    }
+
+    
+    // The road route between pickup (A) and drop-off (B), for the trip form and trip page.
+    public function route(Request $request, RoadSnapper $snapper)
+    {
+        $data = $request->validate([
+            'from_lat' => ['required', 'numeric', 'between:-90,90'],
+            'from_lng' => ['required', 'numeric', 'between:-180,180'],
+            'to_lat' => ['required', 'numeric', 'between:-90,90'],
+            'to_lng' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        return response()->json($snapper->roadRoute(
+            [round((float) $data['from_lat'], 6), round((float) $data['from_lng'], 6)],
+            [round((float) $data['to_lat'], 6), round((float) $data['to_lng'], 6)],
+        ));
     }
 }

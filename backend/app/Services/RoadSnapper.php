@@ -168,11 +168,23 @@ class RoadSnapper
         return $line;
     }
 
-    // Lost-signal part: the most likely road route between the two ends.
+        // Lost-signal part: the most likely road route between the two ends.
     private function route(array $from, array $to): array
     {
+        return $this->roadRoute($from, $to)['points'];
+    }
+
+    /**
+     * The road route between two points (also used for the planned route A -> B).
+     * Falls back to a straight line when OSRM is off or cannot be reached.
+     *
+     * @return array{points: array, km: float|null, minutes: int|null, on_roads: bool}
+     */
+    public function roadRoute(array $from, array $to): array
+    {
+        $straight = ['points' => [$from, $to], 'km' => null, 'minutes' => null, 'on_roads' => false];
         if (! $this->enabled()) {
-            return [$from, $to];
+            return $straight;
         }
 
         $coords = "{$from[1]},{$from[0]};{$to[1]},{$to[0]}";
@@ -181,11 +193,17 @@ class RoadSnapper
             'overview' => 'full',
         ]);
 
-        $coordinates = $hit['routes'][0]['geometry']['coordinates'] ?? null;
+        $route = $hit['routes'][0] ?? null;
+        if (! $route || empty($route['geometry']['coordinates'])) {
+            return $straight;
+        }
 
-        return $coordinates
-            ? array_map(fn ($c) => [round($c[1], 6), round($c[0], 6)], $coordinates)
-            : [$from, $to];
+        return [
+            'points' => array_map(fn ($c) => [round($c[1], 6), round($c[0], 6)], $route['geometry']['coordinates']),
+            'km' => isset($route['distance']) ? round($route['distance'] / 1000, 1) : null,
+            'minutes' => isset($route['duration']) ? (int) round($route['duration'] / 60) : null,
+            'on_roads' => true,
+        ];
     }
 
     // ---- OSRM requests (cached) ----

@@ -129,6 +129,12 @@ Route::middleware(["auth", "role:admin,dispatcher"])->group(function () {
     Route::get("/geocode", GeocodeController::class)
         ->middleware("throttle:30,1")
         ->name("geocode");
+        Route::get("/geocode/reverse", [GeocodeController::class, "reverse"])
+        ->middleware("throttle:30,1")
+        ->name("geocode.reverse");
+    Route::get("/route-preview", [MapController::class, "route"])
+        ->middleware("throttle:60,1")
+        ->name("route.preview");
 
     Route::get("/map", [MapController::class, "index"])->name("map.index");
     Route::get("/map/data", [MapController::class, "data"])->name("map.data");
