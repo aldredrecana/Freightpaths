@@ -12,6 +12,8 @@ Route::post('/login', [AuthController::class, 'login'])
 Route::middleware(['auth:sanctum', 'role:driver'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/me', [AuthController::class, 'updateProfile']);
+    Route::post('/me/password', [AuthController::class, 'changePassword'])->middleware('throttle:6,1');
 
     Route::get('/trips', [TripController::class, 'index']);
     Route::get('/trips/{schedule}', [TripController::class, 'show']);
