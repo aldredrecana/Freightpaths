@@ -14,144 +14,172 @@
 <body class="font-sans text-gray-900 antialiased">
     <div class="min-h-screen flex">
 
-        <div class="hidden lg:flex lg:w-1/2 bg-[#073B3C] text-white flex-col justify-between p-16">
-            <x-brand-logo :light="true" />
+        {{-- Left: a photo under a teal overlay, the headline, what the system does, and a preview card --}}
+        <div class="relative hidden overflow-hidden bg-[#073B3C] text-white lg:flex lg:w-1/2">
+            <img src="{{ asset('images/login.webp') }}" alt="" aria-hidden="true"
+                class="absolute inset-0 h-full w-full object-cover" onerror="this.remove()">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#073B3C] via-[#073B3C]/85 to-[#073B3C]/40"></div>
+
+            <div class="relative flex w-full flex-col justify-between p-14">
+                <x-brand-logo :light="true" />
+
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-widest text-accent-400">Connected fleets. Clearer
+                        roads.</p>
+                    <h1 class="mt-5 text-5xl font-bold leading-tight tracking-tight">Every mile.<br>Under control.</h1>
+
+                    <ul class="mt-8 space-y-3 text-sm text-white/85">
+                        @foreach ([['M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z', 'GPS tracking with regularly updated location data'], ['M4 5h16v15H4zM4 10h16M8 3v4M16 3v4', 'Trip scheduling and driver assignment'], ['M5 12l5 5L20 7', 'Rest stops and delivery records for every trip']] as [$icon, $text])
+                            <li class="flex items-center gap-3">
+                                <span
+                                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/10 text-accent-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" aria-hidden="true">
+                                        <path d="{{ $icon }}" />
+                                    </svg>
+                                </span>
+                                {{ $text }}
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    {{-- A small preview of a trip, like the one on the GPS Tracking page --}}
+                    <div
+                        class="mt-10 max-w-sm rounded-lg border border-white/15 bg-white/95 p-4 text-[#0E2F30] shadow-xl">
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="h-2 w-2 rounded-full bg-brand-600"></span>
+                            <span class="font-mono font-semibold">ABC 1234</span>
+                            <span class="text-gray-600">Juan Dela Cruz</span>
+                            <span class="ml-auto text-gray-400">FP-0108</span>
+                        </div>
+                        <div class="mt-2 flex items-center gap-2 text-[11px]">
+                            <span class="font-medium text-brand-700">On the road</span>
+                            <span class="text-gray-500">41 km/h</span>
+                            <span class="text-gray-400">&middot; Last GPS point 20 s ago</span>
+                        </div>
+                        <div class="mt-3 flex items-center gap-2 text-[11px] text-gray-500">
+                            <span class="h-2 w-2 rounded-full bg-emerald-600"></span> Calamba
+                            <span class="h-px flex-1 border-t border-dashed border-gray-300"></span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 text-brand-600"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 6h11v10H3z" />
+                                <path d="M14 10h4l3 3v3h-7z" />
+                                <circle cx="7" cy="17" r="2" />
+                                <circle cx="17" cy="17" r="2" />
+                            </svg>
+                            <span class="h-px flex-1 border-t border-dashed border-gray-300"></span>
+                            Santa Rosa <span class="h-2 w-2 rounded-full bg-red-600"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-white/60">&copy; {{ date('Y') }} FreightPath. Built to keep you moving.</p>
+            </div>
+        </div>
+
+        <p class="text-sm text-accent-200/80">&copy; {{ date('Y') }} FreightPath. Built to keep you moving.</p>
+    </div>
+
+    <div class="flex w-full lg:w-1/2 items-center justify-center bg-[#F6F7FB] px-6 py-12"></div>
+    <div class="w-full max-w-md">
+        <x-brand-logo />
+
+        <p class="mt-14 text-xs font-semibold uppercase tracking-widest text-gray-400">Your operations,
+            connected</p>
+        <h2 class="mt-4 text-4xl font-bold tracking-tight text-[#0E2F30]">Welcome back</h2>
+        <p class="mt-3 text-gray-500">Sign in to your FreightPath account.</p>
+
+        <x-auth-session-status class="mt-6" :status="session('status')" />
+
+        <form method="POST" action="{{ route('login') }}" class="mt-10 space-y-6">
+            @csrf
+
+            <div class="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
+                <label class="cursor-pointer">
+                    <input type="radio" name="login_as" value="admin" class="peer sr-only"
+                        {{ old('login_as') === 'admin' ? 'checked' : '' }}>
+                    <span
+                        class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition peer-checked:bg-white peer-checked:text-brand-600 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none"
+                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" />
+                            <path d="M9 12l2 2 4-4" />
+                        </svg>
+                        Admin
+                    </span>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="login_as" value="dispatcher" class="peer sr-only"
+                        {{ old('login_as', 'dispatcher') === 'dispatcher' ? 'checked' : '' }}>
+                    <span
+                        class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition peer-checked:bg-white peer-checked:text-brand-600 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none"
+                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <rect x="4" y="4" width="7" height="7" rx="1" />
+                            <rect x="13" y="4" width="7" height="7" rx="1" />
+                            <rect x="4" y="13" width="7" height="7" rx="1" />
+                            <rect x="13" y="13" width="7" height="7" rx="1" />
+                        </svg>
+                        Dispatcher
+                    </span>
+                </label>
+            </div>
 
             <div>
-                <p class="text-xs font-semibold uppercase tracking-widest text-accent-400">Connected fleets. Clearer
-                    roads.</p>
-                <h1 class="mt-6 text-6xl font-bold leading-tight tracking-tight">Every mile.<br>Under control.</h1>
-                <p class="mt-6 max-w-md text-lg leading-relaxed 	text-accent-100">
-                    A better way to keep your drivers, trips, and operations moving together.
-                </p>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus
+                    autocomplete="username" placeholder="Enter your email"
+                    class="mt-2 block w-full rounded-lg border border-gray-200 px-4 py-3 text-sm placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500">
+                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            </div>
 
-                <div class="mt-16 flex items-center gap-4 text-accent-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-7 w-7 shrink-0" fill="none"
-                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                        aria-hidden="true">
-                        <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
-                        <circle cx="12" cy="11" r="2" />
-                    </svg>
-                    <div class="flex-1 border-t-2 border-dashed 	border-accent-400/40"></div>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-10 w-10 shrink-0"
-                        fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                        stroke-linejoin="round" aria-hidden="true">
-                        <path d="M3 6h11v10H3z" />
-                        <path d="M14 10h4l3 3v3h-7z" />
-                        <circle cx="7" cy="17" r="2" />
-                        <circle cx="17" cy="17" r="2" />
-                    </svg>
-                    <div class="flex-1 border-t-2 border-dashed 	border-accent-400/40"></div>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-7 w-7 shrink-0" fill="none"
-                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                        aria-hidden="true">
-                        <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
-                        <circle cx="12" cy="11" r="2" />
-                    </svg>
+            <div x-data="{ show: false }">
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <div class="relative mt-2">
+                    <input id="password" name="password" :type="show ? 'text' : 'password'" type="password" required
+                        autocomplete="current-password" placeholder="Enter your password"
+                        class="block w-full rounded-lg border border-gray-200 px-4 py-3 pr-20 text-base placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500">
+                    <button type="button" @click="show = ! show" x-text="show ? 'Hide' : 'Show'"
+                        class="absolute inset-y-0 right-0 px-4 text-sm font-semibold text-brand-700">Show</button>
                 </div>
+                <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
 
-            <p class="text-sm text-accent-200/80">&copy; {{ date('Y') }} FreightPath. Built to keep you moving.</p>
-        </div>
+            <label class="flex items-center gap-3 text-base text-gray-700">
+                <input type="checkbox" name="remember" checked
+                    class="h-5 w-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                Keep me signed in on this device
+            </label>
 
-        <div class="flex w-full lg:w-1/2 items-center justify-center bg-white px-6 py-12">
-            <div class="w-full max-w-md">
-                <x-brand-logo />
+            <button type="submit"
+                class="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-3.5 text-sm font-semibold text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
+                Sign in
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+            </button>
+        </form>
 
-                <p class="mt-14 text-xs font-semibold uppercase tracking-widest text-gray-400">Your operations,
-                    connected</p>
-                <h2 class="mt-4 text-4xl font-bold tracking-tight text-[#0E2F30]">Welcome back</h2>
-                <p class="mt-3 text-gray-500">Sign in to your FreightPath account.</p>
+        @if (Route::has('register'))
+            <p class="mt-6 text-center text-sm text-gray-500">
+                No account? <a href="{{ route('register') }}"
+                    class="font-medium text-brand-600 hover:underline">Register</a>
+            </p>
+        @else
+            <p class="mt-6 text-center text-sm text-gray-500">
+                Forgot your password or need an account? Please ask your administrator.
+            </p>
+        @endif
 
-                <x-auth-session-status class="mt-6" :status="session('status')" />
-
-                <form method="POST" action="{{ route('login') }}" class="mt-10 space-y-6">
-                    @csrf
-
-                    <div class="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="login_as" value="admin" class="peer sr-only"
-                                {{ old('login_as') === 'admin' ? 'checked' : '' }}>
-                            <span
-                                class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition peer-checked:bg-white peer-checked:text-brand-600 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5"
-                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" />
-                                    <path d="M9 12l2 2 4-4" />
-                                </svg>
-                                Admin
-                            </span>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="login_as" value="dispatcher" class="peer sr-only"
-                                {{ old('login_as', 'dispatcher') === 'dispatcher' ? 'checked' : '' }}>
-                            <span
-                                class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition peer-checked:bg-white peer-checked:text-brand-600 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5"
-                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <rect x="4" y="4" width="7" height="7" rx="1" />
-                                    <rect x="13" y="4" width="7" height="7" rx="1" />
-                                    <rect x="4" y="13" width="7" height="7" rx="1" />
-                                    <rect x="13" y="13" width="7" height="7" rx="1" />
-                                </svg>
-                                Dispatcher
-                            </span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input id="email" name="email" type="email" value="{{ old('email') }}" required
-                            autofocus autocomplete="username" placeholder="Enter your email"
-                            class="mt-2 block w-full rounded-lg border border-gray-200 px-4 py-3 text-sm placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500">
-                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                    </div>
-
-                    <div x-data="{ show: false }">
-                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                        <div class="relative mt-2">
-                            <input id="password" name="password" :type="show ? 'text' : 'password'" type="password"
-                                required autocomplete="current-password" placeholder="Enter your password"
-                                class="block w-full rounded-lg border border-gray-200 px-4 py-3 pr-20 text-base placeholder-gray-400 focus:border-brand-500 focus:ring-brand-500">
-                            <button type="button" @click="show = ! show" x-text="show ? 'Hide' : 'Show'"
-                                class="absolute inset-y-0 right-0 px-4 text-sm font-semibold text-brand-700">Show</button>
-                        </div>
-                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                    </div>
-
-                    <label class="flex items-center gap-3 text-base text-gray-700">
-                        <input type="checkbox" name="remember" checked
-                            class="h-5 w-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
-                        Keep me signed in on this device
-                    </label>
-
-                    <button type="submit"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-3.5 text-sm font-semibold text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
-                        Sign in
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            aria-hidden="true">
-                            <path d="M5 12h14M13 6l6 6-6 6" />
-                        </svg>
-                    </button>
-                </form>
-
-                @if (Route::has('register'))
-                    <p class="mt-6 text-center text-sm text-gray-500">
-                        No account? <a href="{{ route('register') }}"
-                            class="font-medium text-brand-600 hover:underline">Register</a>
-                    </p>
-                @else
-                    <p class="mt-6 text-center text-sm text-gray-500">
-                        Forgot your password or need an account? Please ask your administrator.
-                    </p>
-                @endif
-
-                <p class="mt-10 text-center text-xs text-gray-400">Secure access. Smarter operations.</p>
-            </div>
-        </div>
+        <p class="mt-10 text-center text-xs text-gray-400">Secure access. Smarter operations.</p>
+    </div>
+    </div>
     </div>
 </body>
 
