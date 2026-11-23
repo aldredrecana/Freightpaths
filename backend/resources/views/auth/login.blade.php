@@ -12,14 +12,14 @@
 </head>
 
 <body class="font-sans text-gray-900 antialiased">
-    <div class="min-h-screen flex">
+    <div class="flex min-h-screen lg:h-screen lg:overflow-hidden">
 
         <div class="relative hidden overflow-hidden bg-[#073B3C] text-white lg:flex lg:w-1/2">
             <img src="{{ asset('images/login.webp') }}" alt="" aria-hidden="true"
                 class="absolute inset-0 h-full w-full object-cover" onerror="this.remove()">
             <div class="absolute inset-0 bg-gradient-to-t from-[#073B3C] via-[#073B3C]/85 to-[#073B3C]/40"></div>
 
-            <div class="relative flex w-full flex-col justify-between p-14">
+            <div class="relative flex w-full flex-col justify-between p-12">
                 <x-brand-logo :light="true" />
 
                 <div>
@@ -67,18 +67,18 @@
             </div>
         </div>
 
-        <div class="flex w-full lg:w-1/2 items-center justify-center bg-[#F6F7FB] px-6 py-12">
+        <div class="flex w-full lg:w-1/2 items-center justify-center bg-[#F6F7FB] px-6 py-8 lg:overflow-y-auto">
             <div class="w-full max-w-md">
-                <x-brand-logo />
+                <div class="mb-10 lg:hidden"><x-brand-logo /></div>
 
-                <p class="mt-14 text-xs font-semibold uppercase tracking-widest text-gray-400">Your operations,
+                <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Your operations,
                     connected</p>
                 <h2 class="mt-4 text-4xl font-bold tracking-tight text-[#0E2F30]">Welcome back</h2>
                 <p class="mt-3 text-gray-500">Sign in to your FreightPath account.</p>
 
                 <x-auth-session-status class="mt-6" :status="session('status')" />
 
-                <form method="POST" action="{{ route('login') }}" class="mt-10 space-y-6">
+                <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-5">
                     @csrf
 
                     <div class="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
@@ -162,7 +162,7 @@
                     </p>
                 @endif
 
-                <p class="mt-10 text-center text-xs text-gray-400">Secure access. Smarter operations.</p>
+                <p class="mt-8 text-center text-xs text-gray-400">Secure access. Smarter operations.</p>
             </div>
         </div>
     </div>
