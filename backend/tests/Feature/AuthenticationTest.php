@@ -6,40 +6,51 @@ use App\Models\Driver;
 use App\Models\User;
 use Tests\TestCase;
 
-/** Login (with the Dispatcher/Driver tab), registration, logout, and the timezone setting. */
+/** Login (Admin/Dispatcher tabs, staff only), registration, logout, and the timezone setting. */
 class AuthenticationTest extends TestCase
 {
-    public function test_staff_can_log_in_on_the_dispatcher_tab(): void
+    public function test_admins_log_in_on_the_admin_tab(): void
     {
         $admin = $this->makeUser('admin');
 
-        $this->post('/login', ['email' => $admin->email, 'password' => 'password', 'login_as' => 'dispatcher'])
+        $this->post('/login', ['email' => $admin->email, 'password' => 'password', 'login_as' => 'admin'])
             ->assertRedirect('/dashboard');
 
         $this->assertAuthenticatedAs($admin);
     }
 
-    public function test_drivers_can_log_in_on_the_driver_tab(): void
+    public function test_dispatchers_log_in_on_the_dispatcher_tab(): void
+    {
+        $dispatcher = $this->makeUser('dispatcher');
+
+        $this->post('/login', ['email' => $dispatcher->email, 'password' => 'password', 'login_as' => 'dispatcher'])
+            ->assertRedirect('/dashboard');
+
+        $this->assertAuthenticatedAs($dispatcher);
+    }
+
+    public function test_drivers_are_sent_to_the_app(): void
     {
         $driver = $this->makeUser('driver');
 
-        $this->post('/login', ['email' => $driver->email, 'password' => 'password', 'login_as' => 'driver'])
-            ->assertRedirect('/dashboard');
-
-        $this->assertAuthenticatedAs($driver);
+        foreach (['admin', 'dispatcher'] as $tab) {
+            $this->post('/login', ['email' => $driver->email, 'password' => 'password', 'login_as' => $tab])
+                ->assertSessionHasErrors(['email' => 'Drivers use the FreightPath Driver app. Please sign in on your phone.']);
+            $this->assertGuest();
+        }
     }
 
     public function test_the_wrong_tab_is_rejected(): void
     {
         $admin = $this->makeUser('admin');
-        $driver = $this->makeUser('driver');
+        $dispatcher = $this->makeUser('dispatcher');
 
-        $this->post('/login', ['email' => $driver->email, 'password' => 'password', 'login_as' => 'dispatcher'])
-            ->assertSessionHasErrors('email');
+        $this->post('/login', ['email' => $admin->email, 'password' => 'password', 'login_as' => 'dispatcher'])
+            ->assertSessionHasErrors(['email' => 'This is an admin account. Choose the Admin tab.']);
         $this->assertGuest();
 
-        $this->post('/login', ['email' => $admin->email, 'password' => 'password', 'login_as' => 'driver'])
-            ->assertSessionHasErrors('email');
+        $this->post('/login', ['email' => $dispatcher->email, 'password' => 'password', 'login_as' => 'admin'])
+            ->assertSessionHasErrors(['email' => 'This is not an admin account. Choose the Dispatcher tab.']);
         $this->assertGuest();
     }
 

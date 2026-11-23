@@ -31,7 +31,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'login_as' => ['required', 'in:dispatcher,driver'],
+            'login_as' => ['required', 'in:admin,dispatcher'],
         ];
     }
 
@@ -53,15 +53,23 @@ class LoginRequest extends FormRequest
         }
         /** @var User $user */
         $user = Auth::user();
-        $wantsDriver = $this->input('login_as') === 'driver';
+                $tab = $this->input('login_as');
 
-        if ($user->hasRole('driver') !== $wantsDriver) {
+        // Drivers use the phone app (it sends the GPS), so the website is staff only.
+        if ($user->hasRole('driver')) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Drivers use the FreightPath Driver app. Please sign in on your phone.',
+            ]);
+        }
+
+        if (! $user->hasRole($tab)) {
             Auth::logout();
             RateLimiter::hit($this->throttleKey());
             throw ValidationException::withMessages([
-                'email' => $wantsDriver
-                   ? 'This is not a driver account. Choose the Dispatcher tab.'
-                   : 'This is a driver account. Choose the Driver tab.',
+                'email' => $tab === 'admin'
+                    ? 'This is not an admin account. Choose the Dispatcher tab.'
+                    : 'This is an admin account. Choose the Admin tab.',
             ]);
         }
 

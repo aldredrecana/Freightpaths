@@ -70,6 +70,20 @@
 
                     <div class="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
                         <label class="cursor-pointer">
+                            <input type="radio" name="login_as" value="admin" class="peer sr-only"
+                                {{ old('login_as') === 'admin' ? 'checked' : '' }}>
+                            <span
+                                class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition peer-checked:bg-white peer-checked:text-brand-600 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5"
+                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" />
+                                    <path d="M9 12l2 2 4-4" />
+                                </svg>
+                                Admin
+                            </span>
+                        </label>
+                        <label class="cursor-pointer">
                             <input type="radio" name="login_as" value="dispatcher" class="peer sr-only"
                                 {{ old('login_as', 'dispatcher') === 'dispatcher' ? 'checked' : '' }}>
                             <span
@@ -83,22 +97,6 @@
                                     <rect x="13" y="13" width="7" height="7" rx="1" />
                                 </svg>
                                 Dispatcher
-                            </span>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="login_as" value="driver" class="peer sr-only"
-                                {{ old('login_as') === 'driver' ? 'checked' : '' }}>
-                            <span
-                                class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-500 transition peer-checked:bg-white peer-checked:text-brand-600 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5"
-                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M3 6h11v10H3z" />
-                                    <path d="M14 10h4l3 3v3h-7z" />
-                                    <circle cx="7" cy="17" r="2" />
-                                    <circle cx="17" cy="17" r="2" />
-                                </svg>
-                                Driver
                             </span>
                         </label>
                     </div>
