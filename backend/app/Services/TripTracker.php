@@ -141,7 +141,11 @@ class TripTracker
             'state' => $state,
             'label' => $label,
             'message' => $message,
-            'last' => $last ? $this->lastPoint($last) + [
+                        // While resting, the truck marker stays where the truck is parked,
+            // even if the driver walks around with the phone.
+            'last' => $last ? ($state === 'resting'
+                ? ['lat' => round((float) $lastRest->latitude, 6), 'lng' => round((float) $lastRest->longitude, 6)]
+                : $this->lastPoint($last)) + [
             'accuracy' => $last->accuracy,
             'heading' => $heading,
             'seconds_ago' => $secondsAgo,

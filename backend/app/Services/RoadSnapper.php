@@ -25,6 +25,9 @@ class RoadSnapper
 
     private float $startedAt;
 
+    
+    public function __construct(private PathSmoother $smoother) {}
+
     /**
      * @param  Collection  $pings  LocationPing models in time order (latitude, longitude, accuracy, recorded_at)
      * @return array<int, array{type: string, points: array<int, array{0: float, 1: float}>}>
@@ -33,6 +36,10 @@ class RoadSnapper
     {
         $this->startedAt = microtime(true);
         $runs = $this->runs($this->clean($pings));
+        if (config('freightpath.smooth_path')) {
+            // Smooth each part on its own, so nothing is ever smoothed across a lost-signal gap.
+     $runs = array_map(fn ($run) => $this->smoother->smooth($run), $runs);
+        }
         $segments = [];
 
         foreach ($runs as $i => $run) {

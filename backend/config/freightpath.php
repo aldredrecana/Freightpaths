@@ -25,6 +25,9 @@ return [
 
     'rest_max_speed_ms' => (float) env('FREIGHTPATH_REST_MAX_SPEED_MS', 2.0),
     'rest_merge_gap_minutes' => (int) env('FREIGHTPATH_REST_MERGE_GAP_MINUTES', 10),
+        // After a rest has lasted the minimum time, the driver may walk around (store, restroom)
+    // up to this far from the truck at walking speed, and it still counts as the same rest.
+    'rest_walk_radius_m' => (float) env('FREIGHTPATH_REST_WALK_RADIUS_M', 300),
     'rest_merge_distance_m' => (float) env('FREIGHTPATH_REST_MERGE_DISTANCE_M', 200),
 
     
@@ -44,6 +47,8 @@ return [
     // If OSRM cannot be reached, the map simply draws the GPS points as they are.
     'snap_to_roads' => (bool) env('FREIGHTPATH_SNAP_TO_ROADS', true),
     'osrm_url' => env('FREIGHTPATH_OSRM_URL', 'https://router.project-osrm.org'),
+    // Data smoothing of the drawn path (Kalman filter + parked hold). The saved points never change.
+    'smooth_path' => (bool) env('FREIGHTPATH_SMOOTH_PATH', true),
     'path_max_accuracy_m' => (int) env('FREIGHTPATH_PATH_MAX_ACCURACY_M', 50), // rougher points are left out of the line
     'path_gap_seconds' => (int) env('FREIGHTPATH_PATH_GAP_SECONDS', 120), // silence longer than this...
     'path_gap_meters' => (int) env('FREIGHTPATH_PATH_GAP_METERS', 300), // ...over this distance = lost signal

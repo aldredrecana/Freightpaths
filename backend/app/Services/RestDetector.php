@@ -16,6 +16,7 @@ class RestDetector
         private float $maxSpeedMs = 2.0,      // faster than this (m/s) = the truck is moving
         private int $mergeGapSeconds = 600,   // two rests closer in time than this are joined...
         private float $mergeDistanceMeters = 200, // ...if their centers are this close
+        private float $walkRadiusMeters = 300,    // a resting driver may walk this far from the truck
     ) {}
 
     public static function fromConfig(): self
@@ -27,6 +28,7 @@ class RestDetector
             (float) config('freightpath.rest_max_speed_ms', 2.0),
             (int) config('freightpath.rest_merge_gap_minutes', 10) * 60,
             (float) config('freightpath.rest_merge_distance_m', 200),
+            (float) config('freightpath.rest_walk_radius_m', 300),
         );
     }
 
@@ -52,7 +54,8 @@ class RestDetector
             $anchor = $points[$i];
             $sumLat = $anchor['lat'];
             $sumLng = $anchor['lng'];
-            $count = 1;
+            $count = 1;  // points that set the rest's center
+            $total = 1;  // all points in the rest (also the walking ones)
             $j = $i;
 
             // Grow the window. The circle is centered on the average of the points so far
@@ -63,16 +66,33 @@ class RestDetector
                 $gap = $next['time'] - $points[$j]['time'];
                 $center = ['lat' => $sumLat / $count, 'lng' => $sumLng / $count];
 
-                if ($gap > $this->maxGapSeconds
-                    || $this->isMoving($points, $j + 1)
-                    || $this->distance($center, $next) > $this->radiusMeters
-                    || $this->distance($anchor, $next) > 2 * $this->radiusMeters) {
+                if ($gap > $this->maxGapSeconds || $this->isMoving($points, $j + 1)) {
                     break;
                 }
 
-                $sumLat += $next['lat'];
-                $sumLng += $next['lng'];
-                $count++;
+                $outside = $this->distance($center, $next) > $this->radiusMeters
+                    || $this->distance($anchor, $next) > 2 * $this->radiusMeters;
+
+                if ($outside) {
+                    // The driver walking around during a real rest (to a store or restroom):
+                    // only after the rest has lasted the minimum time, only at walking speed
+                    // (as the phone reports it), and only within the walking distance.
+                    $restedLongEnough = $points[$j]['time'] - $anchor['time'] >= $this->minSeconds;
+                    $walking = isset($next['speed']) && $next['speed'] !== null
+                        && $next['speed'] >= 0 && $next['speed'] <= $this->maxSpeedMs;
+
+                    if (! $restedLongEnough || ! $walking
+                        || $this->distance($center, $next) > $this->walkRadiusMeters) {
+                        break;
+                    }
+                } else {
+                    // Only points near the truck move the rest's center.
+                    $sumLat += $next['lat'];
+                    $sumLng += $next['lng'];
+                    $count++;
+                }
+
+                $total++;
                 $j++;
             }
 
@@ -82,7 +102,7 @@ class RestDetector
                     'ended_at' => $points[$j]['time'],
                     'lat' => $sumLat / $count,
                     'lng' => $sumLng / $count,
-                    'count' => $count,
+                    'count' => $total,
                 ];
 
                 $i = $j + 1;

@@ -30,6 +30,7 @@ class RoadSnapTest extends TestCase
 
     public function test_without_snapping_the_lost_signal_part_is_a_separate_gap(): void
     {
+        config(['freightpath.smooth_path' => false]); // these check the exact raw points
         $trip = $this->trip();
         // Driving: points 15 s apart, about 100 m apart.
         $this->ping($trip, 30, 14.1000);
@@ -49,6 +50,7 @@ class RoadSnapTest extends TestCase
 
     public function test_rough_points_are_left_out_of_the_line(): void
     {
+        config(['freightpath.smooth_path' => false]); // these check the exact raw points
         $trip = $this->trip();
         $this->ping($trip, 5, 14.1000);
         $this->ping($trip, 5, 14.1050, 400, 15); // a 400 m cell-tower fix
@@ -98,6 +100,7 @@ class RoadSnapTest extends TestCase
 
     public function test_if_osrm_is_down_the_raw_gps_line_is_used(): void
     {
+        config(['freightpath.smooth_path' => false]); // these check the exact raw points
         config(['freightpath.snap_to_roads' => true]);
         Http::fake(fn () => Http::response('Service unavailable', 503));
 
