@@ -36,6 +36,11 @@
                 <path d="M12 7v5l3 2" />
             @break
 
+            @case('alert')
+                <path d="M12 3l9.5 17h-19z" />
+                <path d="M12 10v4M12 17.5v.01" />
+            @break
+
             @case('map')
                 <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z" />
                 <path d="M9 3v15M15 6v15" />

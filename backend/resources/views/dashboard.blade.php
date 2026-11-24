@@ -46,6 +46,12 @@
 
         $alertItems = collect([
             [
+                $alerts['incidents'] ?? 0,
+                'open problem report(s) from drivers',
+                route('incidents.index'),
+                'border-red-300 bg-red-100 text-red-900',
+            ],
+            [
                 $alerts['reassign'],
                 'trip(s) need a new driver',
                 route('schedules.index', ['status' => 'needs_reassignment']),

@@ -17,7 +17,7 @@ class MapController extends Controller
     // Every trip that is on the road, with where its driver was last seen.
     public function data(TripTracker $tracker)
     {
-        $trips = Schedule::with(['driver.user', 'truck'])
+        $trips = Schedule::with(['driver.user', 'truck', 'incidents' => fn ($q) => $q->whereNull('resolved_at')])
             ->where('status', 'en_route')
             ->orderBy('departure_at')
             ->get();
@@ -32,6 +32,8 @@ class MapController extends Controller
                 'destination' => $s->destination_address,
                 'url' => route('schedules.show', $s),
                 'tracking_url' => route('schedules.tracking', $s),
+                // An open problem report (breakdown, accident...), shown in red on the map list.
+                'incident' => $s->incidents->first()?->label,
             ] + $tracker->summary($s))->values(),
         ]);
     }

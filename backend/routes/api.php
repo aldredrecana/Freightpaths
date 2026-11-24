@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\IncidentController;
 use App\Http\Controllers\Api\TripController;
 use App\Http\Controllers\ScheduleController;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,8 @@ Route::middleware(['auth:sanctum', 'role:driver'])->group(function () {
     Route::get('/trips/{schedule}', [TripController::class, 'show']);
     Route::get('/trips/{schedule}/track', [TripController::class, 'track']);
     Route::get('/trips/{schedule}/route', [TripController::class, 'route']);
+    Route::get('/trips/{schedule}/incidents', [IncidentController::class, 'index']);
+    Route::post('/trips/{schedule}/incidents', [IncidentController::class, 'store'])->middleware('throttle:6,1');
 
     // Same methods the website uses, so the rules stay in one place.
     Route::post('/trips/{schedule}/status', [ScheduleController::class, 'updateStatus']);

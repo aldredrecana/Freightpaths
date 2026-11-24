@@ -255,6 +255,13 @@
                         .seconds_ago : null)));
                     row.appendChild(top);
 
+                    // An open problem report from the driver
+                    if (t.incident) {
+                        row.appendChild(el('div',
+                            'mt-1 ml-4 inline-block rounded bg-red-100 px-1.5 py-0.5 text-[11px] font-semibold text-red-800',
+                            '\u26a0 ' + t.incident + ' reported'));
+                    }
+
                     // Line 2: driver and trip number
                     const mid = el('div', 'mt-0.5 flex items-center gap-2 pl-4 text-xs');
                     mid.appendChild(el('span', 'truncate text-gray-800', t.driver));
@@ -427,6 +434,14 @@
                     facts.appendChild(cell);
                 });
                 box.appendChild(facts);
+
+                if (t.incident) {
+                    const warn = el('a',
+                        'block border-b border-red-100 bg-red-50 px-4 py-2 text-xs font-semibold text-red-800 hover:underline',
+                        '\u26a0 ' + t.incident + ' reported by the driver. See Problem reports \u2192');
+                    warn.href = @json(route('incidents.index'));
+                    box.appendChild(warn);
+                }
 
                 // Route and message
                 const route = el('div', 'border-t border-gray-100 px-4 py-2.5 text-xs');

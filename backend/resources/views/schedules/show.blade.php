@@ -156,6 +156,47 @@
                 </form>
             @endif
 
+            {{-- Problems the driver reported on this trip --}}
+            @if (!auth()->user()->hasRole('driver') && $schedule->incidents->isNotEmpty())
+                <div class="rounded-md border border-red-200 bg-white">
+                    <div class="flex items-center justify-between border-b border-red-100 bg-red-50 px-4 py-2.5">
+                        <h3 class="text-sm font-semibold text-red-900">Problem reports</h3>
+                        <a href="{{ route('incidents.index', ['status' => 'all']) }}"
+                            class="text-xs font-medium text-red-800 hover:underline">All reports &rarr;</a>
+                    </div>
+                    <ul class="divide-y divide-gray-100 text-xs">
+                        @foreach ($schedule->incidents as $incident)
+                            <li class="flex flex-wrap items-start justify-between gap-3 px-4 py-2.5">
+                                <div>
+                                    <span class="font-semibold text-gray-800">{{ $incident->label }}</span>
+                                    <span class="text-gray-400">&middot;
+                                        {{ $incident->reported_at->format('M d, g:i A') }}</span>
+                                    @if ($incident->note)
+                                        <p class="mt-0.5 text-gray-600">{{ $incident->note }}</p>
+                                    @endif
+                                    @if ($incident->map_url)
+                                        <a href="{{ $incident->map_url }}" target="_blank" rel="noopener"
+                                            class="mt-0.5 inline-block text-brand-700 hover:underline">Open location in
+                                            Maps &rarr;</a>
+                                    @endif
+                                </div>
+                                @if ($incident->resolved_at)
+                                    <span
+                                        class="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700">Resolved</span>
+                                @else
+                                    <form method="POST" action="{{ route('incidents.resolve', $incident) }}">
+                                        @csrf
+                                        <button type="submit"
+                                            class="rounded-md bg-brand-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-brand-700">Mark
+                                            resolved</button>
+                                    </form>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @if (!in_array($schedule->status, ['en_route', 'delivered'], true) && $schedule->hasPins())
                 <div id="route-card" class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                     <h3 class="font-semibold text-gray-800">Planned route</h3>

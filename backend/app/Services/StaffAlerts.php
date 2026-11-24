@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DeliveryStatusLog;
+use App\Models\Incident;
 use App\Models\LocationPing;
 use App\Models\Schedule;
 use Illuminate\Support\Collection;
@@ -13,10 +14,28 @@ class StaffAlerts
     // Every alert, most important first.
     public function all(): Collection
     {
-        return $this->declined()
+         return $this->incidents()
+            ->concat($this->declined())
             ->concat($this->noSignal())
             ->concat($this->urgent())
             ->values();
+    }
+        // A driver reported a problem on the road (breakdown, accident...) that is not resolved yet.
+    public function incidents(): Collection
+    {
+        return Incident::open()
+            ->with(['driver.user', 'schedule'])
+            ->latest('reported_at')
+            ->get()
+            ->map(fn (Incident $i) => [
+                'key' => 'incident-'.$i->id,
+                'type' => 'incident',
+                'title' => $i->label.': '.$i->driver->user->name,
+                'detail' => trim(($i->schedule ? $i->schedule->reference.'. ' : '').($i->note ?? ''))
+                    .' Call '.$i->driver->user->name.' ('.$i->driver->contact_no.').',
+                'url' => route('incidents.index'),
+                'ago' => $i->reported_at->diffForHumans(),
+            ]);
     }
 
     // A driver declined, so the trip needs a new driver.

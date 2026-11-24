@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GeocodeController;
+use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
@@ -137,5 +138,7 @@ Route::middleware(["auth", "role:admin,dispatcher"])->group(function () {
         ->name("route.preview");
 
     Route::get("/map", [MapController::class, "index"])->name("map.index");
+    Route::get("/incidents", [IncidentController::class, "index"])->name("incidents.index");
+    Route::post("/incidents/{incident}/resolve", [IncidentController::class, "resolve"])->name("incidents.resolve");
     Route::get("/map/data", [MapController::class, "data"])->name("map.data");
 });

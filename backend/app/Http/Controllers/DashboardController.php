@@ -73,6 +73,7 @@ class DashboardController extends Controller
                 ->where("departure_at", "<=", now()->addHours($window))
                 ->count(),
             "no_signal" => $staffAlerts->noSignal()->count(),
+            "incidents" => \App\Models\Incident::open()->count(),
             "licenses" => Driver::whereDate(
                 "license_expiry",
                 "<=",

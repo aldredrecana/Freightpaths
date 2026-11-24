@@ -147,4 +147,10 @@ class Schedule extends Model
             ? $this->assigned_at ?? $this->created_at
             : null;
     }
+
+    
+    public function incidents()
+    {
+        return $this->hasMany(Incident::class)->latest('reported_at');
+    }
 }

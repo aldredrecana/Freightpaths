@@ -43,6 +43,7 @@
                 ['Truck Management', 'trucks.index', 'trucks.*', 'truck'],
                 ['Schedule Management', 'schedules.index', 'schedules.*', 'calendar'],
                 ['GPS Tracking', 'map.index', 'map.*', 'map'],
+                ['Problem Reports', 'incidents.index', 'incidents.*', 'alert'],
                 ['Transaction History', 'transactions.index', 'transactions.*', 'history'],
             ];
 
