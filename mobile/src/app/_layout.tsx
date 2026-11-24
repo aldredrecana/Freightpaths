@@ -17,9 +17,14 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={!!user}>
         <Stack.Screen name="(tabs)" />
+
         <Stack.Screen
           name="trip/[id]"
           options={{ headerShown: true, title: "Trip" }}
+        />
+        <Stack.Screen
+          name="deliver/[id]"
+          options={{ headerShown: true, title: "Proof of delivery" }}
         />
       </Stack.Protected>
       <Stack.Protected guard={!user}>

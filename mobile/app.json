@@ -44,6 +44,14 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "cameraPermission": "FreightPath uses the camera to take the proof-of-delivery photo.",
+          "photosPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "FreightPath shares your location with the dispatcher while a trip is on the way.",

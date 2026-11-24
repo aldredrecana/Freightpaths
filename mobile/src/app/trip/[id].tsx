@@ -1,5 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
+import {
+  router,
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+} from "expo-router";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -106,14 +111,8 @@ export default function TripDetail() {
 
   function onAction(next: string) {
     if (next === "delivered") {
-      Alert.alert(
-        "Mark as delivered?",
-        "Only do this after the goods are handed over.",
-        [
-          { text: "Not yet", style: "cancel" },
-          { text: "Yes, delivered", onPress: () => changeStatus(next) },
-        ],
-      );
+      // Delivered needs the proof first: photo, receiver's name and signature.
+      router.push(`/deliver/${id}`);
     } else {
       changeStatus(next);
     }
