@@ -17,6 +17,8 @@ import { colors } from "../../theme";
 import { stopTracking } from "../../tracking";
 import { useTrips } from "../../trips";
 import { useApi } from "../../useApi";
+import { router } from "expo-router";
+import type { Href } from "expo-router";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type Notice = { kind: "ok" | "error"; text: string } | null;
@@ -253,6 +255,13 @@ export default function ProfileScreen() {
             disabled={!current || !next || !confirm}
           />
         </Card>
+
+        <Button
+          label="Activity test"
+          tone="light"
+          icon="walk-outline"
+          onPress={() => router.push("/activity-test" as Href)}
+        />
 
         <Button
           label="Sign out"

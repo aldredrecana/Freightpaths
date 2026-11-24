@@ -24,6 +24,10 @@ function RootNavigator() {
           options={{ headerShown: true, title: "Trip" }}
         />
         <Stack.Screen
+          name="activity-test"
+          options={{ headerShown: true, title: "Activity test" }}
+        />
+        <Stack.Screen
           name="deliver/[id]"
           options={{ headerShown: true, title: "Proof of delivery" }}
         />
