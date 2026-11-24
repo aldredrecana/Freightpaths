@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../../api";
 import { StatusBadge } from "../../components/StatusBadge";
+import { ProblemReportCard } from "../../components/ProblemReportCard";
 import { TripRouteCard } from "../../components/TripRouteCard";
 import {
   Banner,
@@ -265,6 +266,10 @@ export default function TripDetail() {
               />
             )}
           </Card>
+        )}
+
+        {(trip.status === "accepted" || trip.status === "en_route") && (
+          <ProblemReportCard tripId={trip.id} />
         )}
 
         {declining && (
