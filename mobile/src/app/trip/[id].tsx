@@ -275,7 +275,7 @@ export default function TripDetail() {
         )}
 
         {(trip.status === "accepted" || trip.status === "en_route") && (
-          <ProblemReportCard tripId={trip.id} />
+          <ProblemReportCard tripId={trip.id} status={trip.status} />
         )}
 
         {declining && (

@@ -40,7 +40,14 @@ const TYPES: { value: string; label: string; icon: IconName }[] = [
 
 // "Problem on the road?" — the driver tells the dispatcher right away (with the GPS location),
 // and sees when the dispatcher has handled it. For real emergencies: Call 911.
-export function ProblemReportCard({ tripId }: { tripId: number }) {
+export function ProblemReportCard({
+  tripId,
+  status,
+}: {
+  tripId: number;
+  status: string;
+}) {
+  const beforeStart = status === "accepted"; // the truck has not left yet
   const call = useApi();
   const callRef = useRef(call); // useApi gives a new function every render; keep the latest here
   callRef.current = call;
@@ -73,7 +80,10 @@ export function ProblemReportCard({ tripId }: { tripId: number }) {
   // The phone's location, if location is allowed. Quick: last known spot, else a fast fix.
   async function here() {
     try {
-      const perm = await Location.getForegroundPermissionsAsync();
+      // Before Start trip the app may not have asked yet, so ask now (it is quick to say yes).
+      let perm = await Location.getForegroundPermissionsAsync();
+      if (!perm.granted && perm.canAskAgain)
+        perm = await Location.requestForegroundPermissionsAsync();
       if (!perm.granted) return null;
       const pos =
         (await Location.getLastKnownPositionAsync({ maxAge: 120_000 })) ??
@@ -141,9 +151,13 @@ export function ProblemReportCard({ tripId }: { tripId: number }) {
       <View style={styles.headRow}>
         <Ionicons name="warning" size={22} color={colors.red} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.heading}>Problem on the road?</Text>
+          <Text style={styles.heading}>
+            {beforeStart ? "Problem with the truck?" : "Problem on the road?"}
+          </Text>
           <Text style={styles.sub}>
-            Your dispatcher is told right away, with your location.
+            {beforeStart
+              ? "For example engine trouble or a flat tire before you leave. Your dispatcher can change the truck or the schedule."
+              : "Your dispatcher is told right away, with your location."}
           </Text>
         </View>
       </View>
