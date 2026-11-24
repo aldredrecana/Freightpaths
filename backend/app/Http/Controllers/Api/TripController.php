@@ -31,8 +31,7 @@ class TripController extends Controller
     {
         abort_unless($schedule->driver->user_id === $request->user()->id, 403);
 
-        $schedule->load(["truck", "statusLogs.loggedBy", "restPeriods"]);
-
+        $schedule->load(["truck", "statusLogs.loggedBy", "restPeriods", "proof"]);
         return new TripResource($schedule);
     }
         // The route the driver has driven so far (for the map in the app).

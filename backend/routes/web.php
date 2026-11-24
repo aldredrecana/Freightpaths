@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeliveryProofController;
 use App\Http\Controllers\GeocodeController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\DriverController;
@@ -139,6 +140,7 @@ Route::middleware(["auth", "role:admin,dispatcher"])->group(function () {
 
     Route::get("/map", [MapController::class, "index"])->name("map.index");
     Route::get("/incidents", [IncidentController::class, "index"])->name("incidents.index");
+    Route::get("/schedules/{schedule}/proof/{kind}", [DeliveryProofController::class, "show"])->name("schedules.proof");
     Route::post("/incidents/{incident}/resolve", [IncidentController::class, "resolve"])->name("incidents.resolve");
     Route::get("/map/data", [MapController::class, "data"])->name("map.data");
 });

@@ -153,4 +153,10 @@ class Schedule extends Model
     {
         return $this->hasMany(Incident::class)->latest('reported_at');
     }
+
+    
+    public function proof()
+    {
+        return $this->hasOne(DeliveryProof::class);
+    }
 }

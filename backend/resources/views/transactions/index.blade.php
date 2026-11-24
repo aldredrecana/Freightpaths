@@ -135,6 +135,19 @@
                         </div>
                     </div>
 
+                    @if ($selected->proof)
+                        <a href="{{ route('schedules.show', $selected) }}"
+                            class="flex items-center gap-3 border-b border-gray-200 px-5 py-2.5 text-xs hover:bg-gray-50">
+                            <img src="{{ route('schedules.proof', [$selected, 'photo']) }}" alt=""
+                                class="h-10 w-14 rounded border border-gray-200 object-cover">
+                            <span class="text-gray-700"><span class="font-semibold text-[#0E2F30]">Proof of
+                                    delivery</span>
+                                &middot; received by {{ $selected->proof->received_by }}
+                                &middot; {{ $selected->proof->captured_at->format('M d, g:i A') }}</span>
+                            <span class="ml-auto font-medium text-brand-700">View photo &amp; signature &rarr;</span>
+                        </a>
+                    @endif
+
                     <ol class="px-5 py-5">
                         @forelse ($logs as $log)
                             @php

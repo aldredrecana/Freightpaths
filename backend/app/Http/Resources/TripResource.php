@@ -37,8 +37,13 @@ class TripResource extends JsonResource
                 "rests" => $this->whenLoaded("restPeriods", fn () => $this->restPeriods->map(fn ($r) => [
                 "started_at" => $r->started_at->toIso8601String(),
                 "ended_at" => $r->ended_at->toIso8601String(),
-                "minutes" => intdiv($r->duration_seconds, 60),
+                                "minutes" => intdiv($r->duration_seconds, 60),
             ])),
+            // Proof of delivery (only who received it and when; the pictures are not sent back).
+            'proof' => $this->whenLoaded('proof', fn () => $this->proof ? [
+                'received_by' => $this->proof->received_by,
+                'captured_at' => $this->proof->captured_at->toIso8601String(),
+            ] : null),
         ];
     }
 }

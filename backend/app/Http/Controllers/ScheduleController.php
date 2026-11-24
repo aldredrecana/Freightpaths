@@ -213,6 +213,13 @@ class ScheduleController extends Controller
             'remarks' => ['nullable', 'string', 'max:500'],
         ]);
 
+                // In the app, Delivered needs the proof (photo + receiver's signature) first.
+        if ($data['status'] === 'delivered' && $request->is('api/*') && ! $schedule->proof()->exists()) {
+            throw ValidationException::withMessages([
+                'status' => 'Take the delivery photo and get the receiver\'s signature first.',
+            ]);
+        }
+
         if ($data['status'] === 'en_route') {
             if ($schedule->truck->status === 'maintenance') {
                 throw ValidationException::withMessages([

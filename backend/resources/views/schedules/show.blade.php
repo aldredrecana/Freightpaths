@@ -225,6 +225,45 @@
             @endif
 
             @if (in_array($schedule->status, ['en_route', 'delivered'], true))
+
+                {{-- Proof of delivery: the photo and the receiver's signature from the driver's app --}}
+                @if (!auth()->user()->hasRole('driver') && $schedule->proof)
+                    @php $proof = $schedule->proof; @endphp
+                    <div class="rounded-md border border-gray-200 bg-white">
+                        <div
+                            class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-2.5">
+                            <h3 class="text-sm font-semibold text-[#0E2F30]">Proof of delivery</h3>
+                            <span class="text-xs text-gray-500">Received by <span
+                                    class="font-semibold text-gray-800">{{ $proof->received_by }}</span>
+                                &middot; {{ $proof->captured_at->format('M d, Y g:i A') }}
+                                @if ($proof->map_url)
+                                    &middot; <a href="{{ $proof->map_url }}" target="_blank" rel="noopener"
+                                        class="text-brand-700 hover:underline">Location</a>
+                                @endif
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+                            <a href="{{ route('schedules.proof', [$schedule, 'photo']) }}" target="_blank"
+                                rel="noopener" class="block">
+                                <p class="mb-1 text-[11px] font-medium uppercase tracking-wide text-gray-400">Delivery
+                                    photo</p>
+                                <img src="{{ route('schedules.proof', [$schedule, 'photo']) }}"
+                                    alt="Photo of the delivered goods"
+                                    class="h-56 w-full rounded-md border border-gray-200 object-cover">
+                            </a>
+                            <div>
+                                <p class="mb-1 text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                                    Receiver's signature</p>
+                                <img src="{{ route('schedules.proof', [$schedule, 'signature']) }}"
+                                    alt="Signature of {{ $proof->received_by }}"
+                                    class="h-56 w-full rounded-md border border-gray-200 bg-white object-contain">
+                                @if ($proof->note)
+                                    <p class="mt-2 text-xs italic text-gray-600">"{{ $proof->note }}"</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 <div id="tracking-card" class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                     data-url="{{ route('schedules.tracking', $schedule) }}"
                     data-live="{{ $schedule->status === 'en_route' ? '1' : '0' }}">
