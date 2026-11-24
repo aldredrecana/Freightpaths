@@ -11,6 +11,10 @@
                             : route('schedules.index'))">Back</x-btn>
 
                     @if (!auth()->user()->hasRole('driver'))
+                        @if ($schedule->canOfferBackload())
+                            <x-btn variant="secondary" :href="route('schedules.create', ['backload_of' => $schedule->id])">Offer
+                                backload</x-btn>
+                        @endif
                         @unless (in_array($schedule->status, ['delivered', 'cancelled', 'en_route'], true))
                             <x-btn :href="route('schedules.edit', $schedule)">Edit trip</x-btn>
                         @endunless
@@ -23,6 +27,30 @@
                 </x-slot>
             </x-page-header>
 
+            {{-- Backload: a return load linked to another trip --}}
+            @if ($schedule->backloadOf || $schedule->backloads->isNotEmpty())
+                <div class="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-900">
+                    @if ($schedule->backloadOf)
+                        <span
+                            class="mr-1 rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-bold uppercase">Backload</span>
+                        Return load after
+                        <a href="{{ route('schedules.show', $schedule->backloadOf) }}"
+                            class="font-semibold underline">{{ $schedule->backloadOf->reference }}</a>.
+                        The driver can accept or decline it.
+                    @endif
+                    @foreach ($schedule->backloads as $back)
+                        <div class="{{ $schedule->backloadOf ? 'mt-1' : '' }}">
+                            Backload offered:
+                            <a href="{{ route('schedules.show', $back) }}"
+                                class="font-semibold underline">{{ $back->reference }}</a>
+                            ({{ \Illuminate\Support\Str::of($back->status)->replace('_', ' ')->title() }})
+                            &middot;
+                            {{ $back->origin_address }} &rarr; {{ $back->destination_address }}
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             @if ($errors->has('delete'))
                 <div class="rounded-lg bg-red-100 p-3 text-sm text-red-800">{{ $errors->first('delete') }}</div>
             @endif
@@ -33,7 +61,8 @@
                     <strong class="uppercase">{{ $schedule->urgency }}</strong>: departure
                     {{ $schedule->departure_at->diffForHumans() }}
                     @if ($schedule->awaiting_since)
-                        &middot; awaiting driver response for {{ $schedule->awaiting_since->diffForHumans(null, true) }}
+                        &middot; awaiting driver response for
+                        {{ $schedule->awaiting_since->diffForHumans(null, true) }}
                     @endif
                 </div>
             @endif

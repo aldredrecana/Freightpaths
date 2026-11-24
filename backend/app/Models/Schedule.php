@@ -22,6 +22,7 @@ class Schedule extends Model
         'origin_lng',
         'destination_lat',
         'destination_lng',
+        'backload_of_id',
     ];
 
     protected $casts = [
@@ -158,5 +159,24 @@ class Schedule extends Model
     public function proof()
     {
         return $this->hasOne(DeliveryProof::class);
+    }
+
+    
+    // The trip this backload follows (null for a normal trip).
+    public function backloadOf()
+    {
+        return $this->belongsTo(Schedule::class, 'backload_of_id');
+    }
+
+    // Backloads offered after this trip.
+    public function backloads()
+    {
+        return $this->hasMany(Schedule::class, 'backload_of_id')->orderBy('departure_at');
+    }
+
+    // A backload can be offered while the trip is accepted, on the way, or just delivered.
+    public function canOfferBackload(): bool
+    {
+        return in_array($this->status, ['accepted', 'en_route', 'delivered'], true);
     }
 }

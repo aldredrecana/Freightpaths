@@ -61,9 +61,44 @@ class ScheduleController extends Controller
         return view('schedules.index', compact('schedules', 'q', 'status', 'counts'));
     }
 
-    public function create()
+        public function create(Request $request)
     {
-        return view('schedules.create', $this->formData());
+        // "Offer backload": a return trip for the same driver and truck, from the drop-off back
+        // toward the pickup, starting after the first trip should arrive. Everything can be edited.
+        $parent = $request->filled('backload_of')
+            ? Schedule::find($request->query('backload_of'))
+            : null;
+
+        if ($parent && ! $parent->canOfferBackload()) {
+            $parent = null;
+        }
+
+        $prefill = null;
+        if ($parent) {
+            $departure = $parent->expected_arrival_at->copy()->addMinutes(30);
+            if ($departure->lt(now()->addMinutes(15))) {
+                $departure = now()->addMinutes(15)->startOfMinute();
+            }
+            $duration = max(60, $parent->departure_at->diffInMinutes($parent->expected_arrival_at));
+
+            $prefill = new Schedule([
+                'driver_id' => $parent->driver_id,
+                'truck_id' => $parent->truck_id,
+                'origin_address' => $parent->destination_address,
+                'destination_address' => $parent->origin_address,
+                'origin_lat' => $parent->destination_lat,
+                'origin_lng' => $parent->destination_lng,
+                'destination_lat' => $parent->origin_lat,
+                'destination_lng' => $parent->origin_lng,
+                'departure_at' => $departure,
+                'expected_arrival_at' => $departure->copy()->addMinutes($duration),
+            ]);
+        }
+
+        return view('schedules.create', $this->formData($parent) + [
+            'prefill' => $prefill,
+            'backloadOf' => $parent,
+        ]);
     }
 
     public function store(Request $request)
@@ -71,12 +106,18 @@ class ScheduleController extends Controller
         $data = $this->validated($request);
         $data['status'] = 'pending';
         $data['assigned_at'] = now();
-        DB::transaction(function () use ($data, $request) {
+
+        $parent = $request->filled('backload_of_id')
+            ? Schedule::find($request->input('backload_of_id'))
+            : null;
+        $data['backload_of_id'] = $parent?->id;
+
+        DB::transaction(function () use ($data, $request, $parent) {
             $schedule = Schedule::create($data);
             $schedule->statusLogs()->create([
                 'logged_by' => $request->user()->id,
                 'status' => 'pending',
-                'remarks' => 'Schedule created.',
+                'remarks' => $parent ? "Schedule created. Backload after {$parent->reference}." : 'Schedule created.',
                 'logged_at' => now(),
             ]);
         });
@@ -470,7 +511,9 @@ class ScheduleController extends Controller
             'origin_lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:origin_lat'],
             'destination_lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:destination_lng'],
             'destination_lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:destination_lat'],
+            'backload_of_id' => ['nullable', 'exists:schedules,id'],
         ]);
+        unset($data['backload_of_id']); // set by store(), never changed when editing
 
         $driver = Driver::findOrFail($data['driver_id']);
         $truck = Truck::findOrFail($data['truck_id']);

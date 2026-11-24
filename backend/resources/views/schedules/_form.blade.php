@@ -4,7 +4,8 @@
     $truckOptions = $trucks->mapWithKeys(fn($t) => [$t->id => $t->plate_no . ' - ' . $t->model])->all();
 
     // Map pins: the old value after a failed save, else the saved trip, else none.
-    $editing = $isEdit ? $schedule : null;
+    $src = $isEdit ? $schedule : $prefill ?? null; // the trip being edited, or a backload's suggested values
+    $editing = $src;
     $pin = function (string $kind) use ($editing) {
         $lat = old($kind . '_lat', $editing?->{$kind . '_lat'});
         $lng = old($kind . '_lng', $editing?->{$kind . '_lng'});
@@ -14,16 +15,16 @@
 @endphp
 
 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-    <x-form-select name="driver_id" label="Driver" placeholder="Select a driver" :options="$driverOptions" :value="$isEdit ? $schedule->driver_id : null"
+    <x-form-select name="driver_id" label="Driver" placeholder="Select a driver" :options="$driverOptions" :value="$src?->driver_id"
         hint="Off-duty drivers are hidden. Overlapping trips are blocked when you save." />
-    <x-form-select name="truck_id" label="Truck" placeholder="Select a truck" :options="$truckOptions" :value="$isEdit ? $schedule->truck_id : null"
+    <x-form-select name="truck_id" label="Truck" placeholder="Select a truck" :options="$truckOptions" :value="$src?->truck_id"
         hint="Trucks in maintenance are hidden. Overlapping trips are blocked when you save." />
-    <x-form-field name="departure_at" label="Departure" type="datetime-local" :value="$isEdit ? $schedule->departure_at->format('Y-m-d\TH:i') : null" />
-    <x-form-field name="expected_arrival_at" label="Expected arrival" type="datetime-local" :value="$isEdit ? $schedule->expected_arrival_at->format('Y-m-d\TH:i') : null" />
+    <x-form-field name="departure_at" label="Departure" type="datetime-local" :value="$src?->departure_at?->format('Y-m-d\TH:i')" />
+    <x-form-field name="expected_arrival_at" label="Expected arrival" type="datetime-local" :value="$src?->expected_arrival_at?->format('Y-m-d\TH:i')" />
     <x-form-textarea name="origin_address" label="Origin address" class="md:col-span-2" rows="2"
-        :value="$isEdit ? $schedule->origin_address : null" />
+        :value="$src?->origin_address" />
     <x-form-textarea name="destination_address" label="Destination address" class="md:col-span-2" rows="2"
-        :value="$isEdit ? $schedule->destination_address : null" />
+        :value="$src?->destination_address" />
 
     {{-- Map pins for pickup (A) and drop-off (B). Optional. --}}
     <div class="md:col-span-2" x-data="routePicker(@js([

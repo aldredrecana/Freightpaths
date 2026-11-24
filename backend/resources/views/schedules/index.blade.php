@@ -43,6 +43,11 @@
                                 <td class="whitespace-nowrap px-4 py-2.5">
                                     <a href="{{ route('schedules.show', $schedule) }}"
                                         class="font-medium text-brand-700 hover:underline">{{ $schedule->reference }}</a>
+
+                                    @if ($schedule->backload_of_id)
+                                        <span
+                                            class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-800">Backload</span>
+                                    @endif
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-2.5 tabular-nums text-gray-700">
                                     {{ $schedule->departure_at->format('M d') }}

@@ -21,6 +21,9 @@ class TripResource extends JsonResource
             'departure_at' => $this->departure_at->toIso8601String(),
             'expected_arrival_at' => $this->expected_arrival_at->toIso8601String(),
             'urgency' => $this->urgency,
+                        // A return load offered after another trip (the driver may accept or decline it).
+            'is_backload' => $this->backload_of_id !== null,
+            'backload_of' => $this->backload_of_id ? $this->backloadOf?->reference : null,
             'truck' => $this->whenLoaded('truck', fn () => [
                 'plate_no' => $this->truck->plate_no,
                 'model' => $this->truck->model,
