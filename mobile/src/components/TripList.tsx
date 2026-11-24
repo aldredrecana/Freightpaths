@@ -23,7 +23,14 @@ function TripRow({ trip }: { trip: Trip }) {
       <Card style={styles.row}>
         <View style={{ flex: 1, gap: 6 }}>
           <View style={styles.rowTop}>
-            <Text style={styles.rowRef}>{trip.reference}</Text>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <Text style={styles.rowRef}>{trip.reference}</Text>
+              {trip.is_backload && (
+                <Text style={styles.backload}>BACKLOAD</Text>
+              )}
+            </View>
             <StatusBadge status={trip.status} />
           </View>
           <Text style={styles.rowRoute} numberOfLines={1}>
@@ -125,5 +132,16 @@ const styles = StyleSheet.create({
     color: colors.muted,
     textAlign: "center",
     paddingHorizontal: 30,
+  },
+
+  backload: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.amber,
+    backgroundColor: colors.amberSoft,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    overflow: "hidden",
   },
 });

@@ -195,6 +195,13 @@ export default function TripDetail() {
       >
         <StatusBadge status={trip.status} />
 
+        {trip.is_backload && (
+          <Banner
+            kind="warn"
+            text={`Backload: a return load after ${trip.backload_of ?? "your last trip"}, so the truck does not drive back empty. You can accept or decline it.`}
+          />
+        )}
+
         {message && <Banner kind="ok" text={message} />}
         {error && <Banner kind="error" text={error} />}
 

@@ -15,6 +15,8 @@ export type Trip = {
   departure_at: string;
   expected_arrival_at: string;
   urgency: string | null;
+  is_backload?: boolean; // a return load offered after another trip
+  backload_of?: string | null; // that trip's reference, e.g. FP-0012
   truck?: { plate_no: string; model: string };
   allowed_next: string[];
   can_decline: boolean;
