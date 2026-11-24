@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { AuthProvider, useAuth } from "../auth";
+import { DialogHost } from "../components/Dialog";
 
 function RootNavigator() {
   const { user, loading } = useAuth();
@@ -38,6 +39,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <RootNavigator />
+      <DialogHost />
     </AuthProvider>
   );
 }

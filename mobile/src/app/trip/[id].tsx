@@ -8,7 +8,6 @@ import {
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +17,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../../api";
+import { confirmDialog } from "../../components/Dialog";
 import { StatusBadge } from "../../components/StatusBadge";
 import { ProblemReportCard } from "../../components/ProblemReportCard";
 import { TripRouteCard } from "../../components/TripRouteCard";
@@ -109,16 +109,27 @@ export default function TripDetail() {
     }
   }
 
-  function onAction(next: string) {
+  async function onAction(next: string) {
     if (next === "delivered") {
       // Delivered needs the proof first: photo, receiver's name and signature.
       router.push(`/deliver/${id}`);
-    } else {
-      changeStatus(next);
+      return;
     }
+    if (next === "en_route") {
+      const yes = await confirmDialog({
+        icon: "navigate",
+        title: "Start this trip?",
+        message:
+          "Your location will be shared with your dispatcher until you mark the trip Delivered.",
+        confirmText: "Start trip",
+        cancelText: "Not yet",
+      });
+      if (!yes) return;
+    }
+    changeStatus(next);
   }
 
-  function confirmDecline() {
+  async function confirmDecline() {
     if (!reason) {
       setError("Please choose a reason.");
       return;
@@ -128,14 +139,15 @@ export default function TripDetail() {
       return;
     }
 
-    Alert.alert(
-      "Decline this trip?",
-      "The dispatcher will assign another driver.",
-      [
-        { text: "Keep trip", style: "cancel" },
-        { text: "Yes, decline", style: "destructive", onPress: sendDecline },
-      ],
-    );
+    const yes = await confirmDialog({
+      icon: "close-circle",
+      tone: "danger",
+      title: "Decline this trip?",
+      message: "The dispatcher will assign another driver.",
+      confirmText: "Yes, decline",
+      cancelText: "Keep trip",
+    });
+    if (yes) sendDecline();
   }
 
   async function sendDecline() {

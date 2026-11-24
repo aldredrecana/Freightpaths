@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Keyboard,
   ScrollView,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth, type User } from "../../auth";
 import { Banner, Button, Card } from "../../components/ui";
+import { confirmDialog } from "../../components/Dialog";
 import { colors } from "../../theme";
 import { stopTracking } from "../../tracking";
 import { useTrips } from "../../trips";
@@ -118,25 +118,20 @@ export default function ProfileScreen() {
     }
   }
 
-  function confirmSignOut() {
+  async function confirmSignOut() {
     const onTheRoad = trips?.some((t) => t.status === "en_route");
-    Alert.alert(
-      "Sign out?",
-      onTheRoad
+    const yes = await confirmDialog({
+      icon: "log-out-outline",
+      tone: "danger",
+      title: "Sign out?",
+      message: onTheRoad
         ? "You have a trip on the way. Signing out stops location sharing, so the dispatcher will see No signal."
         : "You will need your email and password to sign in again.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Sign out",
-          style: "destructive",
-          onPress: async () => {
-            await stopTracking(); // sends any waiting points first
-            await signOut();
-          },
-        },
-      ],
-    );
+      confirmText: "Sign out",
+    });
+    if (!yes) return;
+    await stopTracking(); // sends any waiting points first
+    await signOut();
   }
 
   const initials =

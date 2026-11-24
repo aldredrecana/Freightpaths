@@ -5,7 +5,6 @@ import * as Location from "expo-location";
 import { router, useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import {
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -20,6 +19,7 @@ import SignatureScreen, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../../api";
 import { Banner, Button, Card } from "../../components/ui";
+import { confirmDialog, showDialog } from "../../components/Dialog";
 import { colors } from "../../theme";
 import { stopTracking } from "../../tracking";
 import { useApi } from "../../useApi";
@@ -92,6 +92,14 @@ export default function DeliverScreen() {
 
   async function confirm() {
     if (!photo || !signature || !receiver.trim()) return;
+    const yes = await confirmDialog({
+      icon: "flag",
+      title: "Mark as delivered?",
+      message: `Received by ${receiver.trim()}. The photo and signature will be sent to your dispatcher, and location sharing will stop.`,
+      confirmText: "Yes, delivered",
+      cancelText: "Go back",
+    });
+    if (!yes) return;
     setBusy(true);
     setError(null);
     try {
@@ -112,9 +120,15 @@ export default function DeliverScreen() {
       });
       await stopTracking();
 
-      Alert.alert("Delivered", "Thank you! The trip is marked as delivered.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      await showDialog({
+        icon: "checkmark-circle",
+        tone: "success",
+        title: "Delivered!",
+        message:
+          "Thank you! The trip is marked as delivered and location sharing has stopped.",
+        buttons: [{ text: "Done", value: "ok" }],
+      });
+      router.back();
     } catch (e) {
       setError(
         e instanceof ApiError

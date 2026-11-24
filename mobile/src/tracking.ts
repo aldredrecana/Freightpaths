@@ -2,8 +2,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
 import * as TaskManager from "expo-task-manager";
-import { Alert, PermissionsAndroid, Platform } from "react-native";
+import { PermissionsAndroid, Platform } from "react-native";
 import { api, ApiError } from "./api";
+import { showDialog } from "./components/Dialog";
 import { TOKEN_KEY } from "./config";
 
 type Ping = {
@@ -132,33 +133,32 @@ export async function flushQueue(): Promise<void> {
 async function askConsent(): Promise<boolean> {
   if ((await AsyncStorage.getItem(CONSENT_KEY)) === "yes") return true;
 
-  const agreed = await new Promise<boolean>((resolve) => {
-    Alert.alert(
-      "Location sharing",
+  const answer = await showDialog({
+    icon: "location",
+    title: "Location sharing",
+    message:
       "While a trip is on the way (from Start trip until Delivered), FreightPath records your phone's location, speed and time, " +
-        "even when the screen is off.\n\n" +
-        "Only your dispatcher and admin can see it. It is used to follow the delivery and record rest stops, " +
-        "and it is kept with the trip record.\n\n" +
-        "Tracking stops when you mark the trip Delivered.",
-      [
-        { text: "Not now", style: "cancel", onPress: () => resolve(false) },
-        { text: "I agree", onPress: () => resolve(true) },
-      ],
-      { cancelable: false },
-    );
+      "even when the screen is off.\n\n" +
+      "Only your dispatcher and admin can see it. It is used to follow the delivery and record rest stops, " +
+      "and it is kept with the trip record.\n\n" +
+      "Tracking stops when you mark the trip Delivered.",
+    buttons: [
+      { text: "I agree", value: "yes", kind: "primary" },
+      { text: "Not now", value: "no", kind: "cancel" },
+    ],
   });
+  const agreed = answer === "yes";
 
   if (agreed) await AsyncStorage.setItem(CONSENT_KEY, "yes");
   return agreed;
 }
-function explainBackgroundPermission(): Promise<void> {
-  return new Promise((resolve) => {
-    Alert.alert(
-      "Allow location all the time",
+async function explainBackgroundPermission(): Promise<void> {
+  await showDialog({
+    icon: "navigate",
+    title: "Allow location all the time",
+    message:
       'To follow your trip while the screen is off, choose "Allow all the time" on the next screen.',
-      [{ text: "Continue", onPress: () => resolve() }],
-      { cancelable: false },
-    );
+    buttons: [{ text: "Continue", value: "ok" }],
   });
 }
 

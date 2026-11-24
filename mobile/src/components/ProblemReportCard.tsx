@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Linking,
   Pressable,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
 import { colors } from "../theme";
 import { formatDate } from "../types";
 import { useApi } from "../useApi";
+import { confirmDialog } from "./Dialog";
 import { Banner, Button, Card } from "./ui";
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -28,18 +28,18 @@ type Report = {
 
 const TYPES: { value: string; label: string; icon: IconName }[] = [
   { value: "breakdown", label: "Breakdown", icon: "construct-outline" },
-  { value: "flat_tire", label: "Flat tire", icon: "ellipse-outline" },
-  { value: "accident", label: "Accident", icon: "warning-outline" },
+  { value: "flat_tire", label: "Flat tire", icon: "disc-outline" },
+  { value: "accident", label: "Accident", icon: "car-sport-outline" },
+  { value: "road_blocked", label: "Road blocked", icon: "trail-sign-outline" },
   {
-    value: "road_blocked",
-    label: "Road blocked",
-    icon: "remove-circle-outline",
+    value: "other",
+    label: "Other",
+    icon: "ellipsis-horizontal-circle-outline",
   },
-  { value: "other", label: "Other", icon: "help-circle-outline" },
 ];
 
-// "Problem on the road?" — the driver tells the dispatcher right away (with the GPS location),
-// and sees when the dispatcher has handled it. For real emergencies: Call 911.
+// The driver tells the dispatcher about a problem right away (with the GPS location),
+// before leaving (status "accepted") or on the road ("en_route"). For real emergencies: Call 911.
 export function ProblemReportCard({
   tripId,
   status,
@@ -77,10 +77,9 @@ export function ProblemReportCard({
     return () => clearInterval(timer);
   }, [load]);
 
-  // The phone's location, if location is allowed. Quick: last known spot, else a fast fix.
+  // The phone's location. Before Start trip the app may not have asked yet, so ask now.
   async function here() {
     try {
-      // Before Start trip the app may not have asked yet, so ask now (it is quick to say yes).
       let perm = await Location.getForegroundPermissionsAsync();
       if (!perm.granted && perm.canAskAgain)
         perm = await Location.requestForegroundPermissionsAsync();
@@ -131,33 +130,45 @@ export function ProblemReportCard({
     }
   }
 
-  function call911() {
-    Alert.alert(
-      "Call 911?",
-      "Use this for emergencies: an accident with injuries, fire, or danger.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Call 911",
-          style: "destructive",
-          onPress: () => Linking.openURL("tel:911"),
-        },
-      ],
-    );
+  async function call911() {
+    const yes = await confirmDialog({
+      icon: "call",
+      tone: "danger",
+      title: "Call 911?",
+      message:
+        "Use this for emergencies: an accident with injuries, fire, or danger.",
+      confirmText: "Call 911",
+    });
+    if (yes) Linking.openURL("tel:911");
+  }
+
+  function close() {
+    setOpen(false);
+    setType(null);
+    setNote("");
+    setError(null);
   }
 
   return (
-    <Card style={{ gap: 12 }}>
+    <Card style={styles.card}>
       <View style={styles.headRow}>
-        <Ionicons name="warning" size={22} color={colors.red} />
+        <View style={styles.headIcon}>
+          <Ionicons name="warning" size={24} color={colors.red} />
+        </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.heading}>
-            {beforeStart ? "Problem with the truck?" : "Problem on the road?"}
+            {open
+              ? "What happened?"
+              : beforeStart
+                ? "Problem with the truck?"
+                : "Problem on the road?"}
           </Text>
           <Text style={styles.sub}>
-            {beforeStart
-              ? "For example engine trouble or a flat tire before you leave. Your dispatcher can change the truck or the schedule."
-              : "Your dispatcher is told right away, with your location."}
+            {open
+              ? "Choose one. Your location is sent with the report."
+              : beforeStart
+                ? "Engine trouble or a flat tire before you leave? Your dispatcher can change the truck or the schedule."
+                : "Your dispatcher is told right away, with your location."}
           </Text>
         </View>
       </View>
@@ -169,23 +180,42 @@ export function ProblemReportCard({
 
       {open ? (
         <>
-          <View style={styles.chips}>
+          <View style={styles.grid}>
             {TYPES.map((t) => {
               const on = type === t.value;
               return (
                 <Pressable
                   key={t.value}
                   onPress={() => setType(t.value)}
-                  style={[styles.chip, on && styles.chipOn]}
+                  style={({ pressed }) => [
+                    styles.type,
+                    on && styles.typeOn,
+                    pressed && { opacity: 0.8 },
+                  ]}
                 >
-                  <Ionicons
-                    name={t.icon}
-                    size={18}
-                    color={on ? "#fff" : colors.red}
-                  />
-                  <Text style={[styles.chipText, on && { color: "#fff" }]}>
+                  <View
+                    style={[
+                      styles.typeIcon,
+                      on && { backgroundColor: colors.red },
+                    ]}
+                  >
+                    <Ionicons
+                      name={t.icon}
+                      size={22}
+                      color={on ? "#fff" : colors.red}
+                    />
+                  </View>
+                  <Text style={[styles.typeText, on && { color: colors.red }]}>
                     {t.label}
                   </Text>
+                  {on && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color={colors.red}
+                      style={styles.typeCheck}
+                    />
+                  )}
                 </Pressable>
               );
             })}
@@ -195,7 +225,7 @@ export function ProblemReportCard({
             placeholder={
               type === "other"
                 ? "What happened? (required)"
-                : "What happened? (optional)"
+                : "Add details (optional)"
             }
             placeholderTextColor={colors.muted}
             multiline
@@ -210,85 +240,137 @@ export function ProblemReportCard({
             busy={busy}
             onPress={send}
           />
-          <Pressable style={styles.linkWrap} onPress={() => setOpen(false)}>
+          <Pressable style={styles.linkWrap} onPress={close} hitSlop={8}>
             <Text style={styles.link}>Cancel</Text>
           </Pressable>
         </>
       ) : (
-        <View style={styles.actions}>
-          <View style={{ flex: 1 }}>
-            <Button
-              label="Report a problem"
-              tone="danger"
-              icon="warning-outline"
-              onPress={() => {
-                setOpen(true);
-                setSent(false);
-                setError(null);
-              }}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              label="Call 911"
-              tone="light"
-              icon="call-outline"
-              onPress={call911}
-            />
-          </View>
+        <View style={{ gap: 10 }}>
+          <Button
+            label="Report a problem"
+            tone="danger"
+            icon="megaphone-outline"
+            onPress={() => {
+              setOpen(true);
+              setSent(false);
+              setError(null);
+            }}
+          />
+          <Pressable
+            onPress={call911}
+            style={({ pressed }) => [styles.sos, pressed && { opacity: 0.8 }]}
+          >
+            <Ionicons name="call" size={20} color={colors.red} />
+            <Text style={styles.sosText}>Emergency? Call 911</Text>
+          </Pressable>
         </View>
       )}
 
-      {reports.map((r) => (
-        <View key={r.id} style={styles.report}>
-          <Ionicons
-            name={r.resolved_at ? "checkmark-circle" : "time-outline"}
-            size={20}
-            color={r.resolved_at ? colors.green : colors.amber}
-          />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.reportTitle}>
-              {r.label} · {formatDate(r.reported_at)}
-            </Text>
-            {r.note ? <Text style={styles.sub}>{r.note}</Text> : null}
-            <Text
-              style={[
-                styles.status,
-                { color: r.resolved_at ? colors.green : colors.amber },
-              ]}
-            >
-              {r.resolved_at
-                ? `Resolved by dispatcher${r.resolution_note ? `: ${r.resolution_note}` : ""}`
-                : "Dispatcher notified. Waiting for a reply."}
-            </Text>
-          </View>
+      {reports.length > 0 && (
+        <View style={{ gap: 8 }}>
+          <Text style={styles.listTitle}>YOUR REPORTS</Text>
+          {reports.map((r) => {
+            const done = Boolean(r.resolved_at);
+            return (
+              <View key={r.id} style={styles.report}>
+                <View style={styles.reportTop}>
+                  <Text style={styles.reportTitle}>{r.label}</Text>
+                  <View
+                    style={[
+                      styles.pill,
+                      {
+                        backgroundColor: done
+                          ? colors.greenSoft
+                          : colors.amberSoft,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={done ? "checkmark-circle" : "time"}
+                      size={14}
+                      color={done ? colors.green : colors.amber}
+                    />
+                    <Text
+                      style={[
+                        styles.pillText,
+                        { color: done ? colors.green : colors.amber },
+                      ]}
+                    >
+                      {done ? "Resolved" : "Waiting"}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.reportTime}>
+                  {formatDate(r.reported_at)}
+                </Text>
+                {r.note ? (
+                  <Text style={styles.reportNote}>"{r.note}"</Text>
+                ) : null}
+                <Text style={styles.reportStatus}>
+                  {done
+                    ? `Dispatcher: ${r.resolution_note || "Handled."}`
+                    : "Your dispatcher was notified. Waiting for a reply."}
+                </Text>
+              </View>
+            );
+          })}
         </View>
-      ))}
+      )}
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  headRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  heading: { fontSize: 18, fontWeight: "800", color: colors.text },
-  sub: { fontSize: 14, color: colors.muted, marginTop: 2 },
-  actions: { flexDirection: "row", gap: 10 },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: {
-    flexDirection: "row",
+  card: { gap: 14, borderWidth: 1, borderColor: colors.redSoft },
+  headRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  headIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: colors.redSoft,
     alignItems: "center",
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    justifyContent: "center",
+  },
+  heading: { fontSize: 18, fontWeight: "800", color: colors.text },
+  sub: { fontSize: 14, lineHeight: 20, color: colors.muted, marginTop: 2 },
+  sos: {
+    height: 52,
+    borderRadius: 16,
     borderWidth: 1.5,
     borderColor: colors.redSoft,
     backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
-  chipOn: { backgroundColor: colors.red, borderColor: colors.red },
-  chipText: { fontSize: 15, fontWeight: "700", color: colors.text },
+  sosText: { fontSize: 16, fontWeight: "800", color: colors.red },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  type: {
+    width: "48%",
+    flexGrow: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 10,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    backgroundColor: "#fff",
+  },
+  typeOn: { borderColor: colors.red, backgroundColor: "#FFF5F5" },
+  typeIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: colors.redSoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  typeText: { flex: 1, fontSize: 15, fontWeight: "700", color: colors.text },
+  typeCheck: { marginLeft: -4 },
   input: {
-    minHeight: 70,
+    minHeight: 80,
     borderRadius: 14,
     backgroundColor: colors.bg,
     padding: 14,
@@ -296,15 +378,38 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlignVertical: "top",
   },
-  linkWrap: { alignItems: "center", paddingVertical: 6 },
+  linkWrap: { alignItems: "center", paddingVertical: 4 },
   link: { fontSize: 16, fontWeight: "700", color: colors.muted },
-  report: {
-    flexDirection: "row",
-    gap: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
+  listTitle: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.muted,
+    letterSpacing: 0.8,
+    marginTop: 2,
   },
-  reportTitle: { fontSize: 15, fontWeight: "700", color: colors.text },
-  status: { fontSize: 14, fontWeight: "600", marginTop: 2 },
+  report: { backgroundColor: colors.bg, borderRadius: 14, padding: 12, gap: 2 },
+  reportTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  reportTitle: { fontSize: 16, fontWeight: "800", color: colors.text },
+  reportTime: { fontSize: 13, color: colors.muted },
+  reportNote: {
+    fontSize: 14,
+    color: colors.text,
+    fontStyle: "italic",
+    marginTop: 4,
+  },
+  reportStatus: { fontSize: 14, color: colors.muted, marginTop: 4 },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  pillText: { fontSize: 12, fontWeight: "800" },
 });
