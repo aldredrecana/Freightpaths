@@ -306,6 +306,8 @@
                         class="w-full rounded-lg border border-gray-200"></div>
                     <h4 class="mt-5 mb-2 text-sm font-semibold text-gray-800">Rest periods</h4>
                     <ul id="tracking-rests" class="text-sm text-gray-700"></ul>
+                    <h4 class="mt-5 mb-2 text-sm font-semibold text-gray-800">Breaks (tapped by the driver)</h4>
+                    <ul id="tracking-breaks" class="text-sm text-gray-700"></ul>
                 </div>
 
                 <script type="module">
@@ -416,6 +418,25 @@
                                     ' min)';
                                 list.appendChild(li);
                             });
+
+                            // Breaks the driver started with "Take a break" in the app.
+                            const breaks = document.getElementById('tracking-breaks');
+                            breaks.replaceChildren();
+                            const all = d.breaks || [];
+                            all.forEach(function(b, i) {
+                                const li = document.createElement('li');
+                                li.textContent = 'Break ' + (i + 1) + ': ' + b.from + ' to ' + (b.to || 'now (on break)') +
+                                    ' (' + b.minutes + ' min)';
+                                breaks.appendChild(li);
+                            });
+                            const li = document.createElement('li');
+                            li.className = all.length ? 'mt-1 font-medium text-gray-800' : '';
+                            li.textContent = all.length ?
+                                'Total: ' + all.reduce(function(sum, b) {
+                                    return sum + b.minutes;
+                                }, 0) + ' min in ' + all.length + ' break(s)' :
+                                'No breaks yet.';
+                            breaks.appendChild(li);
                         }
 
                         async function load() {
