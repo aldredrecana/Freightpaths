@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../../api";
 import { confirmDialog } from "../../components/Dialog";
 import { StatusBadge } from "../../components/StatusBadge";
+import { BreakCard } from "../../components/BreakCard";
 import { ProblemReportCard } from "../../components/ProblemReportCard";
 import { TripRouteCard } from "../../components/TripRouteCard";
 import {
@@ -284,6 +285,14 @@ export default function TripDetail() {
               />
             )}
           </Card>
+        )}
+
+        {trip.status === "en_route" && (
+          <BreakCard
+            tripId={trip.id}
+            since={trip.on_break_since ?? null}
+            onChange={load}
+          />
         )}
 
         {(trip.status === "accepted" || trip.status === "en_route") && (

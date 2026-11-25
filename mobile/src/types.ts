@@ -20,6 +20,7 @@ export type Trip = {
   truck?: { plate_no: string; model: string };
   allowed_next: string[];
   can_decline: boolean;
+  on_break_since?: string | null; // when the driver tapped "Take a break" (null = not on a break)
   history?: {
     status: string;
     remarks: string | null;

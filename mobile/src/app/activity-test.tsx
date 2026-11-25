@@ -4,6 +4,7 @@ import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Banner, Button, Card } from "../components/ui";
+import { getTrackingInfo } from "../tracking";
 import { colors } from "../theme";
 
 // TEST SCREEN: checks if Android Activity Recognition works on this phone.
@@ -44,7 +45,11 @@ export default function ActivityTest() {
   function stopAll() {
     stops.current.forEach((stop) => stop());
     stops.current = [];
-    ActivityRecognition.removeObserver().catch(() => {});
+    // Keep Android's updates on while a trip is being tracked (the trip uses them too).
+    getTrackingInfo().then((info) => {
+      if (info.activeId === null)
+        ActivityRecognition.removeObserver().catch(() => {});
+    });
   }
 
   async function start() {

@@ -3,6 +3,7 @@ import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
 import * as TaskManager from "expo-task-manager";
 import { PermissionsAndroid, Platform } from "react-native";
+import { currentActivity, startActivity, stopActivity } from "./activity";
 import { api, ApiError } from "./api";
 import { showDialog } from "./components/Dialog";
 import { TOKEN_KEY } from "./config";
@@ -13,6 +14,8 @@ type Ping = {
   accuracy: number | null;
   speed: number | null;
   recorded_at: string;
+  activity?: string; // what Activity Recognition said (still, walking...), if known
+  activity_confidence?: number;
 };
 type Stored = Ping & { schedule_id: number };
 
@@ -45,6 +48,7 @@ TaskManager.defineTask<{ locations: Location.LocationObject[] }>(
         accuracy: loc.coords.accuracy ?? null,
         speed: loc.coords.speed ?? null,
         recorded_at: new Date(loc.timestamp).toISOString(),
+        ...currentActivity(), // walking or still, so the website knows if it is the driver or the truck
       });
     }
 
@@ -169,6 +173,7 @@ export async function startTracking(
   if (running && (await readActiveTrip()) === tripId) {
     // Already tracking. If nothing has been sent yet (e.g. app reopened), try a quick point.
     if (!(await AsyncStorage.getItem(SENT_KEY))) sendFirstPointNow(tripId);
+    startActivity(); // walking or not, sent with each point
     return { ok: true };
   }
   if (running) await stopTracking();
@@ -226,6 +231,7 @@ export async function startTracking(
   });
 
   sendFirstPointNow(tripId); // don't wait for the first background GPS fix
+  startActivity(); // walking or not, sent with each point
   return { ok: true };
 }
 
@@ -265,6 +271,7 @@ export async function stopTracking(flushFirst = true): Promise<void> {
 
   if (flushFirst) await flushQueue();
   await AsyncStorage.removeItem(ACTIVE_KEY);
+  await stopActivity();
 }
 
 // Call this with the driver's trips: tracking runs only while a trip is on the way.
