@@ -9,7 +9,7 @@ import { showDialog } from "./components/Dialog";
 type Reading = { activity: string; confidence: number; at: number };
 
 const ASKED_KEY = "freightpath_activity_asked_v1";
-const FRESH_MS = 3 * 60_000; // older readings are not sent
+const FRESH_MS = 2 * 60_000; // older readings are not sent (Android may go quiet)
 
 let latest: Reading | null = null;
 let subscription: { remove: () => void } | null = null;
@@ -47,6 +47,9 @@ export async function startActivity(): Promise<void> {
     subscription = ActivityRecognition.addListener(
       "onActivityChange",
       ({ activity, confidence }) => {
+        // "unknown" is Android's "tilting" (the phone was picked up or turned in the hand).
+        // It says nothing about walking or driving, so it does not replace a real reading.
+        if (activity === "unknown") return;
         latest = { activity, confidence, at: Date.now() };
       },
     );
