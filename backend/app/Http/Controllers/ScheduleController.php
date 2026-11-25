@@ -303,7 +303,9 @@ class ScheduleController extends Controller
                 $schedule->driver->update(['status' => 'on_trip']);
             } elseif (
                 in_array($data['status'], ['delivered', 'cancelled'], true)
-            ) {
+                        ) {
+                // A break still going on ends with the trip.
+                $schedule->breaks()->whereNull('ended_at')->update(['ended_at' => now()]);
                 if ($schedule->truck->status === 'on_trip') {
                     $schedule->truck->update(['status' => 'available']);
                 }

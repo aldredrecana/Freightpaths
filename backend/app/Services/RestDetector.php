@@ -17,6 +17,7 @@ class RestDetector
         private int $mergeGapSeconds = 600,   // two rests closer in time than this are joined...
         private float $mergeDistanceMeters = 200, // ...if their centers are this close
         private float $walkRadiusMeters = 300,    // a resting driver may walk this far from the truck
+        private float $walkMaxSpeedMs = 2.8,      // the phone says "walking" and GPS is this slow = the driver, not the truck
     ) {}
 
     public static function fromConfig(): self
@@ -29,6 +30,7 @@ class RestDetector
             (int) config('freightpath.rest_merge_gap_minutes', 10) * 60,
             (float) config('freightpath.rest_merge_distance_m', 200),
             (float) config('freightpath.rest_walk_radius_m', 300),
+            (float) config('freightpath.walk_max_speed_ms', 2.8),
         );
     }
 
@@ -73,16 +75,17 @@ class RestDetector
                 $outside = $this->distance($center, $next) > $this->radiusMeters
                     || $this->distance($anchor, $next) > 2 * $this->radiusMeters;
 
-                if ($outside) {
-                    // The driver walking around during a real rest (to a store or restroom):
-                    // only after the rest has lasted the minimum time, only at walking speed
-                    // (as the phone reports it), and only within the walking distance.
+                                if ($outside) {
+                    // The driver walking around near the parked truck (to a store or restroom),
+                    // within the walking distance. The phone's Activity Recognition saying
+                    // "walking" is enough on its own; with only the GPS speed (no activity),
+                    // the rest must already have lasted the minimum time.
                     $restedLongEnough = $points[$j]['time'] - $anchor['time'] >= $this->minSeconds;
-                    $walking = isset($next['speed']) && $next['speed'] !== null
+                    $slow = isset($next['speed']) && $next['speed'] !== null
                         && $next['speed'] >= 0 && $next['speed'] <= $this->maxSpeedMs;
+                    $walking = $this->isWalking($next) || ($restedLongEnough && $slow);
 
-                    if (! $restedLongEnough || ! $walking
-                        || $this->distance($center, $next) > $this->walkRadiusMeters) {
+                    if (! $walking || $this->distance($center, $next) > $this->walkRadiusMeters) {
                         break;
                     }
                 } else {
@@ -128,11 +131,25 @@ class RestDetector
         return ! isset($points[$k + 1]) || $this->isFast($points[$k + 1]);
     }
 
-    private function isFast(array $point): bool
+        private function isFast(array $point): bool
     {
         $speed = $point['speed'] ?? null;
 
+        // A little too fast for walking, but the phone says walking: GPS noise, not the truck.
+        if ($this->isWalking($point)) {
+            return false;
+        }
+
         return $speed !== null && $speed > $this->maxSpeedMs;
+    }
+
+    /** The phone says walking (or running) and the GPS speed is low: the driver, not the truck. */
+    private function isWalking(array $point): bool
+    {
+        $speed = $point['speed'] ?? null;
+
+        return in_array($point['activity'] ?? null, ['walking', 'running'], true)
+            && ($speed === null || $speed < 0 || $speed <= $this->walkMaxSpeedMs);
     }
 
     /** Joins rests that are close in time and place (e.g. the driver walked to a store and came back). */
@@ -172,11 +189,12 @@ class RestDetector
                     ->orWhere('accuracy', '<=', config('freightpath.rest_max_accuracy_m'));
             })
             ->orderBy('recorded_at')
-            ->get(['latitude', 'longitude', 'speed', 'recorded_at'])
+            ->get(['latitude', 'longitude', 'speed', 'activity', 'recorded_at'])
             ->map(fn ($p) => [
                 'lat' => (float) $p->latitude,
                 'lng' => (float) $p->longitude,
                 'speed' => $p->speed === null ? null : (float) $p->speed,
+                'activity' => $p->activity,
                 'time' => $p->recorded_at->getTimestamp(),
             ])
             ->all();

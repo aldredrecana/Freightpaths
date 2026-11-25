@@ -31,6 +31,10 @@ class TripResource extends JsonResource
             // What this driver may do next, so the app never copies the rules.
             'allowed_next' => $this->allowedNext($request->user()),
             'can_decline' => in_array($this->status, ['pending', 'accepted'], true),
+                        // When the driver tapped "Take a break" (null when not on a break).
+            'on_break_since' => $this->status === 'en_route'
+                ? $this->openBreak()?->started_at->toIso8601String()
+                : null,
             'history' => $this->whenLoaded('statusLogs', fn () => $this->statusLogs->map(fn ($log) => [
                 'status' => $log->status,
                 'remarks' => $log->remarks,

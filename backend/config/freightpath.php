@@ -28,6 +28,9 @@ return [
         // After a rest has lasted the minimum time, the driver may walk around (store, restroom)
     // up to this far from the truck at walking speed, and it still counts as the same rest.
     'rest_walk_radius_m' => (float) env('FREIGHTPATH_REST_WALK_RADIUS_M', 300),
+        // Up to this speed (m/s; 2.8 = 10 km/h), a point the phone marks as "walking" is the driver
+    // walking with the phone, not the truck. Faster than this is always the truck moving.
+    'walk_max_speed_ms' => (float) env('FREIGHTPATH_WALK_MAX_SPEED_MS', 2.8),
     'rest_merge_distance_m' => (float) env('FREIGHTPATH_REST_MERGE_DISTANCE_M', 200),
 
     

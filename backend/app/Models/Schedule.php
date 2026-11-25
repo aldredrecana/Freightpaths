@@ -86,6 +86,19 @@ class Schedule extends Model
         return $this->hasMany(RestPeriod::class)->orderBy('started_at');
     }
 
+    
+    // Breaks the driver took with the "Take a break" button, oldest first.
+    public function breaks(): HasMany
+    {
+        return $this->hasMany(DriverBreak::class)->orderBy('started_at');
+    }
+
+    // The break going on right now, if any.
+    public function openBreak(): ?DriverBreak
+    {
+        return $this->breaks()->whereNull('ended_at')->reorder('started_at', 'desc')->first();
+    }
+
     public function allowedNext(User $user): array
     {
         $next = self::NEXT[$this->status] ?? [];

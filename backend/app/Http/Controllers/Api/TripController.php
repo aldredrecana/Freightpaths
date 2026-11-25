@@ -7,6 +7,7 @@ use App\Http\Resources\TripResource;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
 use App\Services\RoadSnapper;
+use App\Services\TripTracker;
 
 class TripController extends Controller
 {
@@ -35,13 +36,16 @@ class TripController extends Controller
         return new TripResource($schedule);
     }
         // The route the driver has driven so far (for the map in the app).
-       public function track(Request $request, Schedule $schedule, RoadSnapper $snapper)
+    public function track(Request $request, Schedule $schedule, RoadSnapper $snapper, TripTracker $tracker)
     {
         abort_unless($schedule->driver->user_id === $request->user()->id, 403);
 
         $pings = $schedule->locationPings()
             ->orderBy('recorded_at')
-            ->get(['latitude', 'longitude', 'accuracy', 'recorded_at']);
+            ->get(['latitude', 'longitude', 'accuracy', 'speed', 'activity', 'recorded_at']);
+
+        // Only where the truck went (not the driver walking around during a break).
+        $pings = $tracker->truckPings($pings, $schedule->breaks);
 
         return response()->json(['path' => $snapper->flatten($snapper->segments($pings))]);
     }

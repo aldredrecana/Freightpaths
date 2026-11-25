@@ -23,6 +23,9 @@ class LocationController extends Controller
             'pings.*.accuracy' => ['nullable', 'numeric', 'min:0'],
             'pings.*.speed' => ['nullable', 'numeric'],
             'pings.*.recorded_at' => ['required', 'date'],
+            // What the phone's Activity Recognition said at that moment (optional).
+            'pings.*.activity' => ['nullable', 'in:still,walking,running,driving,cycling,unknown'],
+            'pings.*.activity_confidence' => ['nullable', 'integer', 'between:0,100'],
         ]);
 
         $schedule = Schedule::with('driver')->findOrFail($data['schedule_id']);
@@ -48,6 +51,8 @@ class LocationController extends Controller
             'accuracy' => $p['accuracy'] ?? null,
             'speed' => $p['speed'] ?? null,
             'recorded_at' => Carbon::parse($p['recorded_at'])->timezone($tz),
+            'activity' => $p['activity'] ?? null,
+            'activity_confidence' => $p['activity_confidence'] ?? null,
             'created_at' => $now,
         ])->all();
 
