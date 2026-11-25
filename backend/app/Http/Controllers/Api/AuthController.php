@@ -6,10 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    private const MAX_TRIES = 5;       // wrong passwords allowed...
+    private const LOCK_SECONDS = 60;   // ...then wait this long
     public function login(Request $request)
     {
         $data = $request->validate([
@@ -18,15 +22,34 @@ class AuthController extends Controller
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
 
+                // Too many wrong passwords for this email from this phone: wait before trying again
+        // (stops someone from guessing a driver's password). Same rule as the website.
+        $key = 'api-login|' . Str::lower($data['email']) . '|' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, self::MAX_TRIES)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            return response()->json([
+                'message' => "Too many wrong tries. Please wait {$seconds} seconds and try again, or call your dispatcher.",
+                'retry_after' => $seconds,
+            ], 429);
+        }
+
         $user = User::with(['role', 'driver'])
             ->where('email', $data['email'])
             ->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
+            RateLimiter::hit($key, self::LOCK_SECONDS);
+            $left = RateLimiter::remaining($key, self::MAX_TRIES);
+
             throw ValidationException::withMessages([
-                'email' => 'Wrong email or password. Please try again, or call your dispatcher.',
+                'email' => $left > 0 && $left <= 2
+                    ? "Wrong email or password. {$left} " . ($left === 1 ? 'try' : 'tries') . ' left before the app makes you wait.'
+                    : 'Wrong email or password. Please try again, or call your dispatcher.',
             ]);
         }
+
+        RateLimiter::clear($key); // correct password: start counting from zero again
 
         // The phone app is for drivers only. Staff use the website.
         if (! $user->hasRole('driver') || ! $user->driver) {

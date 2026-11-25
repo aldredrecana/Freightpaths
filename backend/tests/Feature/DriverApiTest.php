@@ -41,6 +41,27 @@ class DriverApiTest extends TestCase
             ->assertJsonValidationErrors('email');
     }
 
+        public function test_too_many_wrong_passwords_make_the_phone_wait(): void
+    {
+        $driver = $this->makeDriver();
+        $email = $driver->user->email;
+
+        for ($i = 1; $i <= 5; $i++) {
+            $this->postJson('/api/login', ['email' => $email, 'password' => 'wrong'])->assertUnprocessable();
+        }
+
+        // Even the right password must wait now.
+        $this->postJson('/api/login', ['email' => $email, 'password' => 'password'])
+            ->assertStatus(429)
+            ->assertJsonStructure(['message', 'retry_after']);
+
+        // After a minute the driver can log in again.
+        $this->travel(61)->seconds();
+        $this->postJson('/api/login', ['email' => $email, 'password' => 'password'])
+            ->assertOk()
+            ->assertJsonStructure(['token']);
+    }
+
     public function test_the_trip_list_only_shows_the_drivers_own_trips(): void
     {
         $mine = $this->makeDriver();
