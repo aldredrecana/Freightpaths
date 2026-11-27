@@ -198,4 +198,12 @@ class DriverApiTest extends TestCase
         $this->postJson('/api/login', ['email' => $email, 'password' => 'password'])->assertOk();
         $wrong()->assertJsonPath('tries_left', 3);
     }
+
+        public function test_a_badly_typed_email_also_uses_up_a_try(): void
+    {
+        $this->postJson('/api/login', ['email' => 'dkskkxd', 'password' => 'xx'])
+            ->assertUnprocessable()
+            ->assertJsonPath('tries_left', 3)
+            ->assertJsonPath('message', 'Wrong email or password. You have 3 tries left.');
+    }
 }

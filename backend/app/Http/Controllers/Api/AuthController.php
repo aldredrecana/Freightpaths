@@ -19,7 +19,9 @@ class AuthController extends Controller
         public function login(Request $request)
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
+            // Not checked as an email on purpose: a badly typed email counts as a wrong try
+            // (no account can match it), so it uses up a try like any wrong password.
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
