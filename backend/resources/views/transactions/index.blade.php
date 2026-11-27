@@ -48,10 +48,12 @@
                 <div class="divide-y divide-gray-100">
                     @forelse ($trips as $trip)
                         @php $active = $selected && $selected->id === $trip->id; @endphp
+                        {{-- Green stripe = delivered, gray stripe = cancelled --}}
                         <a href="{{ route('transactions.index', array_merge(request()->query(), ['trip' => $trip->id])) }}"
-                            class="block border-l-2 px-4 py-2.5 {{ $active ? 'border-brand-600 bg-brand-50/60' : 'border-transparent hover:bg-gray-50' }}">
+                            class="block py-2.5 pl-5 pr-4 {{ $trip->status === 'delivered' ? 'shadow-[inset_5px_0_0_#10b981]' : 'shadow-[inset_5px_0_0_#d1d5db]' }} {{ $active ? 'bg-brand-50/70' : 'hover:bg-gray-50' }}">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-xs font-semibold text-[#0E2F30]">{{ $trip->reference }}</span>
+                                <span
+                                    class="text-sm font-bold {{ $active ? 'text-brand-700' : 'text-gray-900' }}">{{ $trip->reference }}</span>
                                 <x-status-pill :status="$trip->status" />
                             </div>
                             <div class="mt-1 truncate text-xs text-gray-500">{{ $trip->origin_address }} &rarr;
@@ -60,6 +62,10 @@
                                 <span>{{ $trip->driver->user->name }}</span>
                                 <span class="tabular-nums">{{ $trip->departure_at->format('M d, Y') }}</span>
                             </div>
+                            @if ($trip->proof)
+                                <div class="mt-1 text-[11px] font-semibold text-emerald-700">Proof of delivery &check;
+                                </div>
+                            @endif
                         </a>
                     @empty
                         <p class="px-4 py-8 text-center text-xs text-gray-500">No finished trips yet.</p>

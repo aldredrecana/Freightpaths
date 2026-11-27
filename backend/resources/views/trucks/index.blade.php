@@ -22,9 +22,9 @@
                 <x-list-toolbar :action="route('trucks.index')" :q="$q" :status="$status"
                     placeholder="Search plate number or model" :tabs="[
                         '' => ['All', $counts->sum()],
-                        'available' => ['Available', $counts->get('available', 0)],
-                        'on_trip' => ['On trip', $counts->get('on_trip', 0)],
-                        'maintenance' => ['Maintenance', $counts->get('maintenance', 0)],
+                        'available' => ['Available', $counts->get('available', 0), 'green'],
+                        'on_trip' => ['On trip', $counts->get('on_trip', 0), 'blue'],
+                        'maintenance' => ['Maintenance', $counts->get('maintenance', 0), 'amber'],
                     ]" />
 
                 <div class="overflow-x-auto">
@@ -32,7 +32,7 @@
                         <thead
                             class="border-b border-gray-200 bg-gray-50 text-[11px] uppercase tracking-wide text-gray-500">
                             <tr>
-                                <th class="px-4 py-2 font-medium">Plate no.</th>
+                                <th class="py-2 pl-5 pr-4 font-medium">Plate no.</th>
                                 <th class="px-4 py-2 font-medium">Model</th>
                                 <th class="px-4 py-2 text-right font-medium">Capacity</th>
                                 <th class="px-4 py-2 font-medium">Status</th>
@@ -42,14 +42,24 @@
                             @forelse ($trucks as $truck)
                                 <tr class="cursor-pointer hover:bg-gray-50"
                                     onclick="window.location='{{ route('trucks.show', $truck) }}'">
-                                    <td class="whitespace-nowrap px-4 py-2.5">
+                                    <x-stripe-cell :status="$truck->status">
                                         <a href="{{ route('trucks.show', $truck) }}"
-                                            class="font-mono font-semibold text-[#0E2F30] hover:underline">{{ $truck->plate_no }}</a>
-                                    </td>
+                                            class="font-mono text-sm font-bold text-gray-900 hover:underline">{{ $truck->plate_no }}</a>
+                                    </x-stripe-cell>
                                     <td class="whitespace-nowrap px-4 py-2.5 text-gray-700">{{ $truck->model }}</td>
                                     <td class="whitespace-nowrap px-4 py-2.5 text-right tabular-nums text-gray-700">
                                         {{ number_format($truck->capacity_kg) }} kg</td>
-                                    <td class="whitespace-nowrap px-4 py-2.5"><x-status-pill :status="$truck->status" /></td>
+                                    <td class="whitespace-nowrap px-4 py-2.5">
+                                        <x-status-pill :status="$truck->status" />
+                                        @if ($truck->status === 'on_trip' && ($trip = $current->get($truck->id)))
+                                            <div class="mt-1 text-[11px] text-gray-500">
+                                                {{ $trip->driver->user->name }} &middot;
+                                                <a href="{{ route('schedules.show', $trip) }}"
+                                                    onclick="event.stopPropagation()"
+                                                    class="font-medium text-brand-700 hover:underline">{{ $trip->reference }}</a>
+                                            </div>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
@@ -62,7 +72,8 @@
                 </div>
 
                 <div class="flex items-center justify-between border-t border-gray-200 px-4 py-2 text-xs text-gray-500">
-                    <span>{{ $trucks->total() }} {{ \Illuminate\Support\Str::plural('truck', $trucks->total()) }}</span>
+                    <span>{{ $trucks->total() }}
+                        {{ \Illuminate\Support\Str::plural('truck', $trucks->total()) }}</span>
                     @if ($trucks->hasPages())
                         <div>{{ $trucks->links() }}</div>
                     @endif

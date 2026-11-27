@@ -202,6 +202,17 @@ class ScheduleRulesTest extends TestCase
         $this->actingAs($staff)->get('/schedules?status=accepted')->assertSee('Elsewhere Town')->assertDontSee('Zamboanga Special');
     }
 
+        public function test_a_trip_that_lost_its_driver_says_so_on_the_schedules_page(): void
+    {
+        $staff = $this->makeUser('dispatcher');
+        $trip = $this->makeTrip($this->makeDriver(), $this->makeTruck(), ['status' => 'needs_reassignment']);
+
+        $this->actingAs($staff)->get('/schedules')
+            ->assertOk()
+            ->assertSee($trip->reference)
+            ->assertSee('Needs driver');
+    }
+
     public function test_finished_trips_leave_the_schedules_page_and_appear_in_trip_history(): void
     {
         $staff = $this->makeUser('dispatcher');

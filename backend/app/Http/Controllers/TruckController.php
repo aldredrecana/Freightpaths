@@ -38,7 +38,17 @@ class TruckController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        return view('trucks.index', compact('trucks', 'counts', 'q', 'status'));
+                // The trip each truck is on right now (en route first, then accepted), to show its driver.
+        $current = Schedule::with('driver.user')
+            ->whereIn('truck_id', $trucks->pluck('id'))
+            ->whereIn('status', ['en_route', 'accepted'])
+            ->orderByRaw("CASE WHEN status = 'en_route' THEN 0 ELSE 1 END")
+            ->orderBy('departure_at')
+            ->get()
+            ->unique('truck_id')
+            ->keyBy('truck_id');
+
+        return view('trucks.index', compact('trucks', 'counts', 'q', 'status', 'current'));
     }
 
     public function show(Truck $truck)

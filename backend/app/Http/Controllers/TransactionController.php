@@ -92,7 +92,7 @@ class TransactionController extends Controller
     // Finished trips, narrowed by the search box and the status filter.
     private function filtered(string $q, ?string $status)
     {
-        return Schedule::with(['driver.user', 'truck'])
+        return Schedule::with(['driver.user', 'truck', 'proof'])
             ->whereIn('status', self::FINISHED)
             ->when($q !== '', function ($query) use ($q) {
                 $like = '%'.$q.'%';

@@ -12,8 +12,8 @@
         <x-card class="mt-4 overflow-hidden">
             <x-list-toolbar :action="route('incidents.index')" :q="$q" :status="$status"
                 placeholder="Search driver, plate or note" :tabs="[
-                    'open' => ['Open', $counts['open']],
-                    'resolved' => ['Resolved', $counts['resolved']],
+                    'open' => ['Open', $counts['open'], 'red'],
+                    'resolved' => ['Resolved', $counts['resolved'], 'green'],
                     'all' => ['All', $counts['open'] + $counts['resolved']],
                 ]" />
 
@@ -21,7 +21,7 @@
                 <table class="min-w-full text-left text-xs">
                     <thead class="border-b border-gray-200 bg-gray-50 text-[11px] uppercase tracking-wide text-gray-500">
                         <tr>
-                            <th class="px-4 py-2 font-medium">Problem</th>
+                            <th class="py-2 pl-5 pr-4 font-medium">Problem</th>
                             <th class="px-4 py-2 font-medium">Driver</th>
                             <th class="px-4 py-2 font-medium">Trip</th>
                             <th class="px-4 py-2 font-medium">Reported</th>
@@ -32,7 +32,8 @@
                     <tbody class="divide-y divide-gray-100">
                         @forelse ($incidents as $incident)
                             <tr class="align-top {{ $incident->resolved_at ? '' : 'bg-red-50/40' }}">
-                                <td class="px-4 py-2.5">
+                                {{-- Problem: red stripe while open, green once resolved --}}
+                                <x-stripe-cell :status="$incident->resolved_at ? 'resolved' : 'open'" wrap>
                                     <span
                                         class="inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[11px] font-semibold {{ $incident->resolved_at ? 'bg-gray-100 text-gray-600' : 'bg-red-100 text-red-800' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-3 w-3"
@@ -46,12 +47,16 @@
                                     @if ($incident->note)
                                         <p class="mt-1 max-w-xs text-gray-700">{{ $incident->note }}</p>
                                     @endif
-                                </td>
+                                </x-stripe-cell>
+
+                                {{-- Driver --}}
                                 <td class="whitespace-nowrap px-4 py-2.5">
                                     <div class="font-medium text-gray-800">{{ $incident->driver->user->name }}</div>
                                     <a href="tel:{{ $incident->driver->contact_no }}"
                                         class="tabular-nums text-brand-700 hover:underline">{{ $incident->driver->contact_no }}</a>
                                 </td>
+
+                                {{-- Trip --}}
                                 <td class="whitespace-nowrap px-4 py-2.5">
                                     @if ($incident->schedule)
                                         <a href="{{ route('schedules.show', $incident->schedule) }}"
@@ -62,10 +67,17 @@
                                         <span class="text-gray-400">&mdash;</span>
                                     @endif
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-2.5 tabular-nums text-gray-700">
-                                    {{ $incident->reported_at->format('M d, g:i A') }}
-                                    <div class="text-gray-400">{{ $incident->reported_at->diffForHumans() }}</div>
+
+                                {{-- Reported: how long ago, big, so an old open report stands out --}}
+                                <td class="whitespace-nowrap px-4 py-2.5 tabular-nums">
+                                    <div
+                                        class="text-sm font-bold {{ $incident->resolved_at ? 'text-gray-700' : 'text-red-700' }}">
+                                        {{ $incident->reported_at->diffForHumans() }}</div>
+                                    <div class="text-[11px] text-gray-400">
+                                        {{ $incident->reported_at->format('M d, g:i A') }}</div>
                                 </td>
+
+                                {{-- Location --}}
                                 <td class="whitespace-nowrap px-4 py-2.5">
                                     @if ($incident->map_url)
                                         <a href="{{ $incident->map_url }}" target="_blank" rel="noopener"
@@ -74,6 +86,8 @@
                                         <span class="text-gray-400">No location</span>
                                     @endif
                                 </td>
+
+                                {{-- Status --}}
                                 <td class="px-4 py-2.5">
                                     @if ($incident->resolved_at)
                                         <span
