@@ -1,18 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Linking,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors } from "../theme";
 import { formatDate } from "../types";
 import { useApi } from "../useApi";
-import { confirmDialog } from "./Dialog";
 import { Banner, Button, Card } from "./ui";
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -39,7 +31,7 @@ const TYPES: { value: string; label: string; icon: IconName }[] = [
 ];
 
 // The driver tells the dispatcher about a problem right away (with the GPS location),
-// before leaving (status "accepted") or on the road ("en_route"). For real emergencies: Call 911.
+// before leaving (status "accepted") or on the road ("en_route").
 export function ProblemReportCard({
   tripId,
   status,
@@ -128,18 +120,6 @@ export function ProblemReportCard({
     } finally {
       setBusy(false);
     }
-  }
-
-  async function call911() {
-    const yes = await confirmDialog({
-      icon: "call",
-      tone: "danger",
-      title: "Call 911?",
-      message:
-        "Use this for emergencies: an accident with injuries, fire, or danger.",
-      confirmText: "Call 911",
-    });
-    if (yes) Linking.openURL("tel:911");
   }
 
   function close() {
@@ -245,25 +225,16 @@ export function ProblemReportCard({
           </Pressable>
         </>
       ) : (
-        <View style={{ gap: 10 }}>
-          <Button
-            label="Report a problem"
-            tone="danger"
-            icon="megaphone-outline"
-            onPress={() => {
-              setOpen(true);
-              setSent(false);
-              setError(null);
-            }}
-          />
-          <Pressable
-            onPress={call911}
-            style={({ pressed }) => [styles.sos, pressed && { opacity: 0.8 }]}
-          >
-            <Ionicons name="call" size={20} color={colors.red} />
-            <Text style={styles.sosText}>Emergency? Call 911</Text>
-          </Pressable>
-        </View>
+        <Button
+          label="Report a problem"
+          tone="danger"
+          icon="megaphone-outline"
+          onPress={() => {
+            setOpen(true);
+            setSent(false);
+            setError(null);
+          }}
+        />
       )}
 
       {reports.length > 0 && (
@@ -333,18 +304,6 @@ const styles = StyleSheet.create({
   },
   heading: { fontSize: 18, fontWeight: "800", color: colors.text },
   sub: { fontSize: 14, lineHeight: 20, color: colors.muted, marginTop: 2 },
-  sos: {
-    height: 52,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.redSoft,
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  sosText: { fontSize: 16, fontWeight: "800", color: colors.red },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   type: {
     width: "48%",

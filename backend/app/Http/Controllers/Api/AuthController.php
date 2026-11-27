@@ -9,12 +9,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Services\LoginLock;
 
 class AuthController extends Controller
 {
     private const MAX_TRIES = 5;       // wrong passwords allowed...
     private const LOCK_SECONDS = 60;   // ...then wait this long
-    public function login(Request $request)
+    
+        public function login(Request $request)
     {
         $data = $request->validate([
             'email' => ['required', 'email'],
@@ -22,16 +24,10 @@ class AuthController extends Controller
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
 
-                // Too many wrong passwords for this email from this phone: wait before trying again
-        // (stops someone from guessing a driver's password). Same rule as the website.
-        $key = 'api-login|' . Str::lower($data['email']) . '|' . $request->ip();
-        if (RateLimiter::tooManyAttempts($key, self::MAX_TRIES)) {
-            $seconds = RateLimiter::availableIn($key);
-
-            return response()->json([
-                'message' => "Too many wrong tries. Please wait {$seconds} seconds and try again, or call your dispatcher.",
-                'retry_after' => $seconds,
-            ], 429);
+        // Too many wrong passwords: the app must wait (1 min, then 2, then 5). See LoginLock.
+        $lock = new LoginLock($data['email'], $request->ip());
+        if ($seconds = $lock->secondsLeft()) {
+            return $this->locked($seconds);
         }
 
         $user = User::with(['role', 'driver'])
@@ -39,17 +35,20 @@ class AuthController extends Controller
             ->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
-            RateLimiter::hit($key, self::LOCK_SECONDS);
-            $left = RateLimiter::remaining($key, self::MAX_TRIES);
+            $left = $lock->failed();
 
-            throw ValidationException::withMessages([
-                'email' => $left > 0 && $left <= 2
-                    ? "Wrong email or password. {$left} " . ($left === 1 ? 'try' : 'tries') . ' left before the app makes you wait.'
-                    : 'Wrong email or password. Please try again, or call your dispatcher.',
-            ]);
+            if ($left === 0) {
+                return $this->locked($lock->secondsLeft());
+            }
+
+            return response()->json([
+                'message' => 'Wrong email or password. You have ' . $left . ' ' . ($left === 1 ? 'try' : 'tries') . ' left.',
+                'errors' => ['email' => ['Wrong email or password. You have ' . $left . ' ' . ($left === 1 ? 'try' : 'tries') . ' left.']],
+                'tries_left' => $left,
+            ], 422);
         }
 
-        RateLimiter::clear($key); // correct password: start counting from zero again
+        $lock->clear(); // correct password: start counting from zero again
 
         // The phone app is for drivers only. Staff use the website.
         if (! $user->hasRole('driver') || ! $user->driver) {
@@ -66,6 +65,15 @@ class AuthController extends Controller
             'token' => $token,
             'user' => $this->payload($user),
         ]);
+    }
+
+    // "Wait before trying again", with the seconds so the app can show a countdown.
+    private function locked(int $seconds)
+    {
+        return response()->json([
+            'message' => 'Too many wrong tries. Please wait ' . LoginLock::words($seconds) . ' and try again, or call your dispatcher.',
+            'retry_after' => $seconds,
+        ], 429);
     }
 
     public function me(Request $request)

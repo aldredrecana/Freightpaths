@@ -44,7 +44,7 @@
                                     onclick="window.location='{{ route('trucks.show', $truck) }}'">
                                     <x-stripe-cell :status="$truck->status">
                                         <a href="{{ route('trucks.show', $truck) }}"
-                                            class="font-mono text-sm font-bold text-gray-900 hover:underline">{{ $truck->plate_no }}</a>
+                                            class="font-mono text-gray-700 hover:underline">{{ $truck->plate_no }}</a>
                                     </x-stripe-cell>
                                     <td class="whitespace-nowrap px-4 py-2.5 text-gray-700">{{ $truck->model }}</td>
                                     <td class="whitespace-nowrap px-4 py-2.5 text-right tabular-nums text-gray-700">
@@ -53,7 +53,8 @@
                                         <x-status-pill :status="$truck->status" />
                                         @if ($truck->status === 'on_trip' && ($trip = $current->get($truck->id)))
                                             <div class="mt-1 text-[11px] text-gray-500">
-                                                {{ $trip->driver->user->name }} &middot;
+                                                {{ $trip->driver->user->name }}
+                                                &middot;class="font-mono text-gray-700 hover:underline">{{ $truck->plate_no }}</a>
                                                 <a href="{{ route('schedules.show', $trip) }}"
                                                     onclick="event.stopPropagation()"
                                                     class="font-medium text-brand-700 hover:underline">{{ $trip->reference }}</a>

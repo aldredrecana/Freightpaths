@@ -36,10 +36,32 @@ export default function LoginScreen() {
   const [showServer, setShowServer] = useState(false);
   const [serverInput, setServerInput] = useState("");
   const [serverNote, setServerNote] = useState<string | null>(null);
+  // Too many wrong passwords: the time the app may try again, and the seconds left.
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(0);
 
   useEffect(() => {
     getApiUrl().then(setServerInput);
   }, []);
+
+  // Live countdown while locked.
+  useEffect(() => {
+    if (!lockedUntil) return;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (left === 0) {
+        setLockedUntil(null);
+        setError(null);
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [lockedUntil]);
+
+  const locked = lockedUntil !== null && secondsLeft > 0;
+  const clock = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`;
 
   // Saves a new server address, but only after checking that it answers.
   async function saveServer() {
@@ -69,7 +91,7 @@ export default function LoginScreen() {
   }
 
   async function onSubmit() {
-    if (busy) return;
+    if (busy || locked) return;
     setError(null);
 
     if (!email.trim() || !password) {
@@ -82,11 +104,17 @@ export default function LoginScreen() {
       await signIn(email, password);
       // On success the app switches to the home screen by itself.
     } catch (e) {
-      setError(
-        e instanceof ApiError
-          ? e.message
-          : "Something went wrong. Please try again.",
-      );
+      if (e instanceof ApiError && e.status === 429 && e.data?.retry_after) {
+        // Locked by the server: show the wait with a live countdown.
+        setLockedUntil(Date.now() + e.data.retry_after * 1000);
+        setError("Too many wrong tries. Please wait, or call your dispatcher.");
+      } else {
+        setError(
+          e instanceof ApiError
+            ? e.message
+            : "Something went wrong. Please try again.",
+        );
+      }
       setBusy(false);
     }
   }
@@ -210,12 +238,25 @@ export default function LoginScreen() {
 
             {error && <Banner kind="error" text={error} />}
 
+            {locked && (
+              <View style={styles.lockBox}>
+                <Ionicons name="time-outline" size={22} color={colors.red} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.lockTitle}>Try again in {clock}</Text>
+                  <Text style={styles.lockSub}>
+                    Each lock gets longer: 1 minute, then 2, then 5.
+                  </Text>
+                </View>
+              </View>
+            )}
+
             <View style={{ marginTop: 6 }}>
               <Button
-                label="Log in"
-                icon="log-in-outline"
+                label={locked ? `Wait ${clock}` : "Log in"}
+                icon={locked ? "lock-closed" : "log-in-outline"}
                 onPress={onSubmit}
                 busy={busy}
+                disabled={locked}
               />
             </View>
 
@@ -379,6 +420,21 @@ const styles = StyleSheet.create({
   },
   fieldFocused: { borderColor: colors.brand, backgroundColor: "#fff" },
   fieldInput: { flex: 1, fontSize: 17, color: colors.ink },
+  lockBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: colors.redSoft,
+  },
+  lockTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: colors.red,
+    fontVariant: ["tabular-nums"],
+  },
+  lockSub: { fontSize: 13, color: colors.red, marginTop: 2 },
   help: {
     flexDirection: "row",
     alignItems: "center",

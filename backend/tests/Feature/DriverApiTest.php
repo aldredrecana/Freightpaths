@@ -41,26 +41,7 @@ class DriverApiTest extends TestCase
             ->assertJsonValidationErrors('email');
     }
 
-        public function test_too_many_wrong_passwords_make_the_phone_wait(): void
-    {
-        $driver = $this->makeDriver();
-        $email = $driver->user->email;
-
-        for ($i = 1; $i <= 5; $i++) {
-            $this->postJson('/api/login', ['email' => $email, 'password' => 'wrong'])->assertUnprocessable();
-        }
-
-        // Even the right password must wait now.
-        $this->postJson('/api/login', ['email' => $email, 'password' => 'password'])
-            ->assertStatus(429)
-            ->assertJsonStructure(['message', 'retry_after']);
-
-        // After a minute the driver can log in again.
-        $this->travel(61)->seconds();
-        $this->postJson('/api/login', ['email' => $email, 'password' => 'password'])
-            ->assertOk()
-            ->assertJsonStructure(['token']);
-    }
+       
 
     public function test_the_trip_list_only_shows_the_drivers_own_trips(): void
     {
@@ -185,5 +166,36 @@ class DriverApiTest extends TestCase
 
         Sanctum::actingAs($this->makeDriver()->user);
         $this->getJson("/api/trips/{$trip->id}/track")->assertForbidden();
+    }
+
+        public function test_wrong_passwords_count_down_then_the_waits_get_longer(): void
+    {
+        $email = $this->makeDriver()->user->email;
+        $wrong = fn () => $this->postJson('/api/login', ['email' => $email, 'password' => 'wrong']);
+
+        $wrong()->assertUnprocessable()->assertJsonPath('tries_left', 3)
+            ->assertJsonPath('message', 'Wrong email or password. You have 3 tries left.');
+        $wrong()->assertJsonPath('tries_left', 2);
+        $wrong()->assertJsonPath('tries_left', 1)->assertJsonPath('message', 'Wrong email or password. You have 1 try left.');
+
+        // 4th wrong try: wait 1 minute (the countdown starts right away).
+        $wrong()->assertStatus(429)->assertJsonPath('retry_after', 60);
+        // Even the right password must wait.
+        $this->postJson('/api/login', ['email' => $email, 'password' => 'password'])->assertStatus(429);
+
+        // Next round: 4 more wrong tries, then 2 minutes.
+        $this->travel(61)->seconds();
+        $wrong(); $wrong(); $wrong();
+        $wrong()->assertStatus(429)->assertJsonPath('retry_after', 120);
+
+        // Then 5 minutes.
+        $this->travel(121)->seconds();
+        $wrong(); $wrong(); $wrong();
+        $wrong()->assertStatus(429)->assertJsonPath('retry_after', 300);
+
+        // After the wait, the right password works and clears everything.
+        $this->travel(301)->seconds();
+        $this->postJson('/api/login', ['email' => $email, 'password' => 'password'])->assertOk();
+        $wrong()->assertJsonPath('tries_left', 3);
     }
 }

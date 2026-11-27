@@ -51,7 +51,7 @@
                                 onclick="window.location='{{ route('schedules.show', $schedule) }}'">
                                 <x-stripe-cell :status="$schedule->status">
                                     <a href="{{ route('schedules.show', $schedule) }}"
-                                        class="text-sm font-semibold text-brand-700 hover:underline">{{ $schedule->reference }}</a>
+                                        class="text-brand-700 hover:underline">{{ $schedule->reference }}</a>
                                     @if ($schedule->backload_of_id)
                                         <span
                                             class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-800">Backload</span>
@@ -72,12 +72,11 @@
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-2.5">
                                     @if ($noDriver)
-                                        <div class="text-sm font-bold text-red-700">Needs driver</div>
+                                        <div class="text-red-700">Needs driver</div>
                                         <div class="text-[11px] text-gray-400">was {{ $schedule->driver->user->name }}
                                         </div>
                                     @else
-                                        <div class="text-sm font-bold text-gray-900">
-                                            {{ $schedule->driver->user->name }}</div>
+                                        <div class="text-gray-700">{{ $schedule->driver->user->name }}</div>
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-2.5 font-mono text-gray-700">

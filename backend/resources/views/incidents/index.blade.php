@@ -51,7 +51,7 @@
 
                                 {{-- Driver --}}
                                 <td class="whitespace-nowrap px-4 py-2.5">
-                                    <div class="font-medium text-gray-800">{{ $incident->driver->user->name }}</div>
+                                    <div class="text-gray-700">{{ $incident->driver->user->name }}</div>
                                     <a href="tel:{{ $incident->driver->contact_no }}"
                                         class="tabular-nums text-brand-700 hover:underline">{{ $incident->driver->contact_no }}</a>
                                 </td>

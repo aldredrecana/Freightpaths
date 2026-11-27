@@ -2,10 +2,12 @@ import { getApiUrl } from "./server";
 
 export class ApiError extends Error {
   status: number;
+  data: any; // the full answer from the server (for example retry_after)
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, data: any = null) {
     super(message);
     this.status = status;
+    this.data = data;
   }
 }
 
@@ -45,6 +47,7 @@ export async function api<T>(
       throw new ApiError(
         firstError ?? data?.message ?? "Something went wrong.",
         res.status,
+        data,
       );
     }
 

@@ -47,7 +47,7 @@
                                 }">
                                     <a href="{{ route('drivers.show', $driver) }}" class="flex items-center gap-2.5">
                                         <x-avatar :name="$driver->user->name" :seed="$driver->id" size="h-8 w-8 text-[11px]" />
-                                        <span class="text-sm font-bold text-gray-900">{{ $driver->user->name }}</span>
+                                        <span class="text-gray-700">{{ $driver->user->name }}</span>
                                     </a>
                                 </x-stripe-cell>
                                 <td class="whitespace-nowrap px-4 py-2 font-mono text-gray-700">

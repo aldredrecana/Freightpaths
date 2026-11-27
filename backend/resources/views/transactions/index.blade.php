@@ -53,7 +53,7 @@
                             class="block py-2.5 pl-5 pr-4 {{ $trip->status === 'delivered' ? 'shadow-[inset_5px_0_0_#10b981]' : 'shadow-[inset_5px_0_0_#d1d5db]' }} {{ $active ? 'bg-brand-50/70' : 'hover:bg-gray-50' }}">
                             <div class="flex items-center justify-between gap-2">
                                 <span
-                                    class="text-sm font-bold {{ $active ? 'text-brand-700' : 'text-gray-900' }}">{{ $trip->reference }}</span>
+                                    class="text-xs {{ $active ? 'text-brand-700' : 'text-gray-700' }}">{{ $trip->reference }}</span>
                                 <x-status-pill :status="$trip->status" />
                             </div>
                             <div class="mt-1 truncate text-xs text-gray-500">{{ $trip->origin_address }} &rarr;
